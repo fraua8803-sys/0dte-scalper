@@ -199,6 +199,12 @@ canvas{display:block}
     <input type="password" class="mfi" id="igPass" placeholder="IG Password">
     <div class="mfl">Environment</div>
     <select class="mfi" id="igEnv"><option value="demo">IG Demo</option><option value="live">IG Live 🔴</option></select>
+    <div style="height:1px;background:var(--border2);margin:10px 0"></div>
+    <div class="mfl">📱 Telegram Bot Token (für Trade-Alerts)</div>
+    <input type="text" class="mfi" id="tgToken" placeholder="z.B. 7123456789:AAF...">
+    <div class="mfl">Telegram Chat ID</div>
+    <input type="text" class="mfi" id="tgChatId" placeholder="z.B. 123456789">
+    <div class="api-note" style="font-size:9px">🤖 Telegram Bot erstellen: @BotFather → /newbot → Token kopieren<br>Chat ID: Nachricht an @userinfobot senden</div>
     <div class="warn-note">⚠️ Auto-Trading stoppt bei -€10 Tagesverlust. Mini Pairs = 0.01 Lots. Spread wird vom Entry abgezogen.</div>
     <div class="modal-btns">
       <button class="mbg" onclick="startPaper()">Paper Only</button>
@@ -376,6 +382,7 @@ const st = {
   positions:[], dailyPnl:0, tradesPlaced:0,
   lastAutoTrade:{}, _lastLoggedConf:0,
   pendingOrders: new Set(),
+  telegram: { botToken: '', chatId: '' },
 };
 
 // ════════════════════════════════════════
@@ -665,6 +672,7 @@ function toggleAuto(){
     btn.className='auto-btn on';btn.textContent='⚡ AUTO TRADING ON — KLICK ZUM STOPPEN';
     badge.className='logo-badge lb-auto';badge.textContent='AUTO';
     log('🤖 Auto-Trading aktiviert — Conf ≥'+AUTO_CONF_THRESHOLD+'% | Max Spread '+MAX_SPREAD_PIPS+'p | Stop -€'+Math.abs(MAX_DAILY_LOSS),'auto');
+    sendTelegram('🟢 AUTO-TRADING AKTIVIERT\nConf ≥'+AUTO_CONF_THRESHOLD+'%\nMax Spread: '+MAX_SPREAD_PIPS+'p\nDaily Stop: -€'+Math.abs(MAX_DAILY_LOSS));
     autoLog('🤖 Auto aktiv — warte auf ICT Signal ≥'+AUTO_CONF_THRESHOLD+'%…');
   }else{
     tog.className='auto-toggle off';tog.innerHTML='<div class="toggle-dot"></div>AUTO OFF';
@@ -717,6 +725,7 @@ function stopAuto(reason){
   document.getElementById('modeBadge').className='logo-badge lb-stopped';
   document.getElementById('modeBadge').textContent='STOPPED';
   log(`⛔ Auto gestoppt: ${reason}`,'e');
+  sendTelegram(`⛔ AUTO-TRADING GESTOPPT\nGrund: ${reason}\nTag P&L: ${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`);
   autoLog(`⛔ GESTOPPT: ${reason}`);
 }
 
@@ -963,6 +972,16 @@ async function placeOrder(auto=false, overridePair=null, overrideDir=null){
     st.pendingOrders.delete(pair.sym);
     renderPositions();
     log(`${auto?'🤖 AUTO':'MANUAL'} ${dir} ${pair.sym} 0.01L @ ${entry.toFixed(pair.dec)} | SL:${slPrice} TP:${tpPrice} | Spread:${spread}p`,'w');
+    if(auto) sendTelegram(
+      `🤖 AUTO TRADE GEÖFFNET\n` +
+      `${dir==='BUY'?'▲':'▼'} ${dir} ${pair.sym}\n` +
+      `Entry: ${entry.toFixed(pair.dec)}\n` +
+      `SL: ${slPrice} (${parseFloat(document.getElementById('slIn').value)}p)\n` +
+      `TP: ${tpPrice} (${parseFloat(document.getElementById('tpIn').value)}p)\n` +
+      `Spread: ${spread}p\n` +
+      `Setup: ${st.signals[pair.sym]?.detail||'ICT'}\n` +
+      `Conf: ${st.signals[pair.sym]?.conf||0}%`
+    );
     startTracker(pos);
     return;
   }
@@ -1013,6 +1032,15 @@ function startTracker(pos){
       updateDailyPnl();
       log(`${won?'✅TP':'❌SL'}: ${pos.sym} ${pos.dir} ${pos.pips>0?'+':''}${pos.pips}p = €${pnl>0?'+':''}${pnl.toFixed(2)} | Day:${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`,won?'s':'e');
       if(pos.auto) autoLog(`${won?'✅':'❌'} Auto ${pos.sym}: ${pos.pips>0?'+':''}${pos.pips}p | Day €${st.dailyPnl.toFixed(2)}`);
+      sendTelegram(
+        `${won?'✅ TAKE PROFIT':'❌ STOP LOSS'} GETROFFEN\n` +
+        `${pos.dir==='BUY'?'▲':'▼'} ${pos.dir} ${pos.sym}\n` +
+        `Entry: ${pos.entry.toFixed(pos.pair.dec)}\n` +
+        `Exit: ${pos.current.toFixed(pos.pair.dec)}\n` +
+        `Pips: ${pos.pips>0?'+':''}${pos.pips}p\n` +
+        `P&L: ${pnl>0?'+':''}€${pnl.toFixed(2)}\n` +
+        `Tag gesamt: ${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`
+      );
       closePos(pos.id);
       return;
     }
@@ -1071,6 +1099,13 @@ async function startLive(){
   const igPass=document.getElementById('igPass').value.trim();
   const env=document.getElementById('igEnv').value;
   if(tdKey){st.tdKey=tdKey;log(`Twelve Data Key: ${tdKey.slice(0,8)}…`,'s');}
+  const tgToken=document.getElementById('tgToken').value.trim();
+  const tgChatId=document.getElementById('tgChatId').value.trim();
+  if(tgToken&&tgChatId){
+    st.telegram={botToken:tgToken,chatId:tgChatId};
+    log(`📱 Telegram Alerts aktiv → Chat ${tgChatId}`,'s');
+    sendTelegram('🤖 ICT Scalper verbunden und bereit\nAuto-Trading: AUS\nDaily Limit: -€10');
+  }
   if(igKey&&igUser&&igPass){
     try{
       const r=await fetch(`${PROXY}/api/session`,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1111,6 +1146,27 @@ async function fetchBalance(){
       el.textContent=`€${(+acc.balance.balance).toLocaleString('de-DE',{minimumFractionDigits:2})}`;
     }
   }catch{}
+}
+
+
+// ════════════════════════════════════════
+//  TELEGRAM NOTIFICATIONS
+// ════════════════════════════════════════
+async function sendTelegram(message){
+  if(!st.telegram.botToken||!st.telegram.chatId) return;
+  try{
+    await fetch(`${PROXY}/api/notify`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        botToken:st.telegram.botToken,
+        chatId:st.telegram.chatId,
+        message
+      })
+    });
+  }catch(e){
+    console.log('Telegram error:',e.message);
+  }
 }
 
 // ════════════════════════════════════════
