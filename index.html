@@ -187,7 +187,7 @@ canvas{display:block}
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-title">⚡ ICT SCALPER</div>
-    <p class="modal-sub">Priorität: EURJPY · GBPJPY · USDJPY · CADJPY<br>Mini Pairs · 0.01 Lots · Spread-aware · Auto-Trading</p>
+    <p class="modal-sub">Priorität: EURJPY · GBPJPY · USDJPY · CADJPY<br>Mini Pairs · 0.01 Lots · <b style='color:var(--gold)'>Erst Demo testen!</b></p>
     <div class="api-note">
       ✅ Twelve Data · IG Live · Telegram — alle voreingestellt<br>
       Nur IG Passwort eingeben und verbinden.
@@ -199,7 +199,7 @@ canvas{display:block}
     <input type="hidden" id="igUser">
     <input type="hidden" id="tgToken">
     <input type="hidden" id="tgChatId">
-    <input type="hidden" id="igEnv" value="live">
+    <input type="hidden" id="igEnv" value="demo">
 
     <div class="mfl">IG Passwort <span style="color:var(--red)">*</span></div>
     <input type="password" class="mfi" id="igPass" placeholder="Dein IG Passwort eingeben…" autofocus>
@@ -396,6 +396,9 @@ const st = {
   lastAutoTrade:{}, _lastLoggedConf:0,
   pendingOrders: new Set(),
   telegram: { botToken: '', chatId: '' },
+  igToken: null,
+  igAccountId: null,
+  igCredentials: null,
 };
 
 // ════════════════════════════════════════
@@ -999,23 +1002,45 @@ async function placeOrder(auto=false, overridePair=null, overrideDir=null){
     return;
   }
 
-  // Live IG
+  // Live IG — direct from browser (iPad IP, no proxy)
   try{
-    const r=await fetch(`${PROXY}/api/positions`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({env:st.env,epic:IG_EPICS[pair.sym],direction:dir,size:LOTS,
-        stopDistance:sl,limitDistance:tp,currencyCode:'EUR'})});
+    const igHeaders={
+      'Content-Type':'application/json',
+      'X-IG-API-KEY':st.igToken.apiKey,
+      'CST':st.igToken.cst,
+      'X-SECURITY-TOKEN':st.igToken.secToken,
+      'Version':'2',
+    };
+    const order={
+      epic:IG_EPICS[pair.sym], expiry:'-',
+      direction:dir, size:LOTS,
+      orderType:'MARKET', timeInForce:'FILL_OR_KILL',
+      guaranteedStop:false, currencyCode:'EUR',
+      stopDistance:sl, limitDistance:tp, trailingStop:false,
+    };
+    const r=await fetch(`${st.igToken.base}/positions/otc`,{
+      method:'POST', headers:igHeaders,
+      body:JSON.stringify(order)
+    });
     const data=await r.json();
-    if(!r.ok)throw new Error(data.error||'Rejected');
+    if(!r.ok)throw new Error(data.errorCode||'Order rejected');
     log(`IG ${data.dealStatus} — ${data.dealReference}`,'s');
     setTimeout(async()=>{
-      const cr=await fetch(`${PROXY}/api/confirms/${data.dealReference}?env=${st.env}`);
-      const cd=await cr.json();
-      pos.entry=cd.level||entry;pos.current=pos.entry;pos.igDealId=cd.dealId;pos.id=cd.dealId||pos.id;
-      st.positions.push(pos);st.tradesPlaced++;st.pendingOrders?.delete(pair.sym);
-      renderPositions();startTracker(pos);fetchBalance();
-      log(`FILLED ${dir} ${pair.sym} @ ${cd.level}`,'s');
+      try{
+        const cr=await fetch(`${st.igToken.base}/confirms/${data.dealReference}`,{headers:igHeaders});
+        const cd=await cr.json();
+        pos.entry=cd.level||entry;pos.current=pos.entry;
+        pos.igDealId=cd.dealId;pos.id=cd.dealId||pos.id;
+        st.positions.push(pos);st.tradesPlaced++;
+        st.pendingOrders?.delete(pair.sym);
+        renderPositions();startTracker(pos);fetchBalance();
+        log(`✅ FILLED ${dir} ${pair.sym} @ ${cd.level}`,'s');
+      }catch(e){log(`Confirm: ${e.message}`,'e');}
     },1500);
-  }catch(e){log(`Order: ${e.message}`,'e');}
+  }catch(e){
+    st.pendingOrders?.delete(pair.sym);
+    log(`Order: ${e.message}`,'e');
+  }
 }
 
 // ════════════════════════════════════════
@@ -1024,6 +1049,21 @@ async function placeOrder(auto=false, overridePair=null, overrideDir=null){
 function startTracker(pos){
   pos._iv=setInterval(()=>{
     const d=st.cache[pos.sym];
+    // Get live P&L from IG via proxy
+    if(st.igConnected&&pos.igDealId){
+      try{
+        const pr=await fetch(`${PROXY}/api/positions?env=${st.env}`);
+        const pd=await pr.json();
+        const livePos=(pd.positions||[]).find(p=>p.position?.dealId===pos.igDealId);
+        if(livePos){
+          pos.pnl=+(livePos.position.upl||0).toFixed(2);
+          pos.current=livePos.market?.offer||pos.current;
+          const pip=pos.pair.pip===2?0.01:0.0001;
+          pos.pips=Math.round((pos.dir==='BUY'?pos.current-pos.entry:pos.entry-pos.current)/pip*10)/10;
+          renderPositions();return;
+        }
+      }catch{}
+    }
     if(d?.lastPrice){
       pos.current=pos.dir==='BUY'?(d.bid||d.lastPrice):(d.ask||d.lastPrice);
     }else{
@@ -1070,9 +1110,12 @@ async function closePos(id){
   if(pos._iv)clearInterval(pos._iv);
   if(st.igConnected&&pos.igDealId){
     try{
-      await fetch(`${PROXY}/api/positions/${pos.igDealId}`,{method:'DELETE',
+      await fetch(`${PROXY}/api/positions/${pos.igDealId}`,{
+        method:'DELETE',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({env:st.env,size:LOTS,direction:pos.dir==='BUY'?'SELL':'BUY'})});
+        body:JSON.stringify({env:st.env,size:LOTS,direction:pos.dir==='BUY'?'SELL':'BUY'})
+      });
+      log(`Position geschlossen: ${pos.sym}`,'i');
     }catch(e){log(`Close: ${e.message}`,'e');}
   }
   st.positions.splice(i,1);renderPositions();fetchBalance();
@@ -1132,18 +1175,25 @@ async function startLive(){
   }
   if(igKey&&igUser&&igPass){
     try{
-      log('Verbinde mit IG...','i');
-      const r=await fetch(`${PROXY}/api/session`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({apiKey:igKey,username:igUser,password:igPass,env})});
+      log('Verbinde mit IG via Proxy…','i');
+      const r=await fetch(`${PROXY}/api/session`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({apiKey:igKey,username:igUser,password:igPass,env})
+      });
       const d=await r.json();
       if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
       if(!d.ok)throw new Error(d.error||'Login rejected');
-      st.env=env;st.igConnected=true;
+      st.env=env;st.igConnected=true;st.igAccountId=d.accountId;
+      // Store credentials for session refresh
+      st.igCredentials={apiKey:igKey,username:igUser,password:igPass,env};
       log(`✅ IG ${env.toUpperCase()} verbunden — Account: ${d.accountId}`,'s');
       fetchBalance();
+      // Schedule session refresh every 5.5 hours
+      scheduleSessionRefresh();
     }catch(e){
-      log(`❌ IG Login fehlgeschlagen: ${e.message}`,'e');
-      log('Bot läuft im Paper Mode','w');
+      log(`❌ IG Login: ${e.message}`,'e');
+      log('Versuche IG Demo oder prüfe Zugangsdaten','w');
     }
   }
   document.getElementById('modal').style.display='none';
@@ -1174,6 +1224,7 @@ function startPaper(){
 }
 
 async function fetchBalance(){
+  if(!st.igConnected) return;
   try{
     const r=await fetch(`${PROXY}/api/accounts?env=${st.env}`);
     const d=await r.json();
@@ -1182,7 +1233,7 @@ async function fetchBalance(){
       const el=document.getElementById('balEl');el.style.display='block';
       el.textContent=`€${(+acc.balance.balance).toLocaleString('de-DE',{minimumFractionDigits:2})}`;
     }
-  }catch{}
+  }catch(e){log(`Balance: ${e.message}`,'w');}
 }
 
 
@@ -1204,6 +1255,31 @@ async function sendTelegram(message){
   }catch(e){
     console.log('Telegram error:',e.message);
   }
+}
+
+
+// ════════════════════════════════════════
+//  SESSION REFRESH (every 5.5h)
+// ════════════════════════════════════════
+function scheduleSessionRefresh(){
+  setTimeout(async()=>{
+    if(!st.igConnected||!st.igCredentials) return;
+    try{
+      const {apiKey,username,password,env}=st.igCredentials;
+      const r=await fetch(`${PROXY}/api/session`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({apiKey,username,password,env})
+      });
+      const d=await r.json();
+      if(d.ok){
+        log('🔄 IG Session erneuert','s');
+        scheduleSessionRefresh();
+      }else{
+        log('⚠️ Session Erneuerung fehlgeschlagen','e');
+      }
+    }catch(e){log(`Session refresh: ${e.message}`,'w');}
+  }, 5.5*60*60*1000); // 5.5 hours
 }
 
 // ════════════════════════════════════════
