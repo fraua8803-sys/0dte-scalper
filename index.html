@@ -1108,22 +1108,35 @@ async function startLive(){
   }
   if(igKey&&igUser&&igPass){
     try{
+      log('Verbinde mit IG...','i');
       const r=await fetch(`${PROXY}/api/session`,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({apiKey:igKey,username:igUser,password:igPass,env})});
       const d=await r.json();
-      if(!r.ok)throw new Error(d.error||'Login failed');
+      if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
+      if(!d.ok)throw new Error(d.error||'Login rejected');
       st.env=env;st.igConnected=true;
-      log(`IG ${env.toUpperCase()} — ${d.accountId}`,'s');
+      log(`✅ IG ${env.toUpperCase()} verbunden — Account: ${d.accountId}`,'s');
       fetchBalance();
-    }catch(e){log(`IG: ${e.message}`,'e');}
+    }catch(e){
+      log(`❌ IG Login fehlgeschlagen: ${e.message}`,'e');
+      log('Bot läuft im Paper Mode','w');
+    }
   }
   document.getElementById('modal').style.display='none';
   const pill=document.getElementById('connPill');
-  pill.className=st.igConnected?'pill pill-on':'pill pill-on';
-  pill.textContent=st.igConnected?'IG LIVE':'TD LIVE';
-  st.mode=st.igConnected?env:'td';
-  document.getElementById('modeBadge').className='logo-badge lb-paper';
-  document.getElementById('modeBadge').textContent=st.igConnected?env.toUpperCase():'TD';
+  if(st.igConnected){
+    pill.className='pill pill-on';
+    pill.textContent=env==='live'?'IG LIVE':'IG DEMO';
+    st.mode=env;
+    document.getElementById('modeBadge').className=env==='live'?'logo-badge lb-auto':'logo-badge lb-paper';
+    document.getElementById('modeBadge').textContent=env==='live'?'LIVE':'DEMO';
+  }else{
+    pill.className='pill pill-on';
+    pill.textContent='TD ONLY';
+    st.mode='td';
+    document.getElementById('modeBadge').className='logo-badge lb-paper';
+    document.getElementById('modeBadge').textContent='PAPER';
+  }
   begin();
 }
 
@@ -1185,8 +1198,8 @@ async function scan(){
     const pair=st.pair;
     const now = Date.now();
     
-    // Fetch new candles every 30 seconds
-    if(now - lastCandleFetch > 30000 || !st.candles[pair.sym]?.length){
+    // Fetch new candles every 60 seconds
+    if(now - lastCandleFetch > 60000 || !st.candles[pair.sym]?.length){
       const candles=await fetchCandles(pair.sym,st.tf);
       if(candles?.length){
         st.candles[pair.sym]=candles;
@@ -1307,8 +1320,8 @@ function begin(){
   renderPairs();
   scan();
   scanAll();
-  setInterval(scan,1000); // Echtzeit — jede Sekunde
-  setInterval(scanAll,10000); // Background pairs alle 10 Sekunden
+  setInterval(scan,10000); // 10 Sekunden — TD Free Tier safe (6/min)
+  setInterval(scanAll,60000); // Background pairs alle 60 Sekunden
   // Auto trade checked on every scan (every second)
 }
 
