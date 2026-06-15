@@ -186,26 +186,26 @@ canvas{display:block}
 
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <div class="modal-title">ICT SCALPER — MINI PAIRS</div>
-    <p class="modal-sub">Echtzeit Forex via Twelve Data. Auto-Trading auf Mini Pairs mit Micro Lots (0.01). Spread wird automatisch einberechnet.</p>
-    <div class="api-note">🔑 Twelve Data Key: <b>536c483fcd0e496db29fe7220bcb7fd8</b> (bereits eingetragen)</div>
-    <div class="mfl">Twelve Data API Key</div>
-    <input type="text" class="mfi" id="tdKey" value="536c483fcd0e496db29fe7220bcb7fd8">
-    <div class="mfl">IG API Key</div>
-    <input type="text" class="mfi" id="igKey" placeholder="IG API Key">
-    <div class="mfl">IG Username</div>
-    <input type="text" class="mfi" id="igUser" placeholder="IG Username">
-    <div class="mfl">IG Password</div>
-    <input type="password" class="mfi" id="igPass" placeholder="IG Password">
-    <div class="mfl">Environment</div>
-    <select class="mfi" id="igEnv"><option value="demo">IG Demo</option><option value="live">IG Live 🔴</option></select>
-    <div style="height:1px;background:var(--border2);margin:10px 0"></div>
-    <div class="mfl">📱 Telegram Bot Token (für Trade-Alerts)</div>
-    <input type="text" class="mfi" id="tgToken" placeholder="z.B. 7123456789:AAF...">
-    <div class="mfl">Telegram Chat ID</div>
-    <input type="text" class="mfi" id="tgChatId" placeholder="z.B. 123456789">
-    <div class="api-note" style="font-size:9px">🤖 Telegram Bot erstellen: @BotFather → /newbot → Token kopieren<br>Chat ID: Nachricht an @userinfobot senden</div>
-    <div class="warn-note">⚠️ Auto-Trading stoppt bei -€10 Tagesverlust. Mini Pairs = 0.01 Lots. Spread wird vom Entry abgezogen.</div>
+    <div class="modal-title">⚡ ICT SCALPER</div>
+    <p class="modal-sub">Priorität: EURJPY · GBPJPY · USDJPY · CADJPY<br>Mini Pairs · 0.01 Lots · Spread-aware · Auto-Trading</p>
+    <div class="api-note">
+      ✅ Twelve Data · IG Live · Telegram — alle voreingestellt<br>
+      Nur IG Passwort eingeben und verbinden.
+    </div>
+
+    <!-- Hidden fields - prefilled by JS -->
+    <input type="hidden" id="tdKey">
+    <input type="hidden" id="igKey">
+    <input type="hidden" id="igUser">
+    <input type="hidden" id="tgToken">
+    <input type="hidden" id="tgChatId">
+    <input type="hidden" id="igEnv" value="live">
+
+    <div class="mfl">IG Passwort</div>
+    <input type="password" class="mfi" id="igPass" placeholder="Dein IG Passwort" autofocus>
+
+    <div style="height:1px;background:var(--border2);margin:8px 0"></div>
+    <div class="warn-note">⚠️ IG Live — echtes Geld. Auto-Trading stoppt bei -€10 Tagesverlust.</div>
     <div class="modal-btns">
       <button class="mbg" onclick="startPaper()">Paper Only</button>
       <button class="mbp" onclick="startLive()">Verbinden + Auto</button>
@@ -305,8 +305,8 @@ canvas{display:block}
         <div class="fl">Pair</div>
         <select class="fi" id="orderPair" onchange="selectPair(this.value)">
           <option>EURJPY</option><option>GBPJPY</option><option>USDJPY</option>
-          <option>USDCAD</option><option>EURCAD</option><option>EURGBP</option>
-          <option>NZDUSD</option><option>GBPCAD</option><option>CADJPY</option>
+          <option>CADJPY</option><option>USDCAD</option><option>EURCAD</option>
+          <option>EURGBP</option><option>NZDUSD</option><option>GBPCAD</option>
         </select>
       </div>
       <div class="lot-info" id="lotInfo">Micro Lot: 0.01 · Mini Pair · Spread inkl.</div>
@@ -350,6 +350,15 @@ canvas{display:block}
 //  CONFIG
 // ════════════════════════════════════════
 const PROXY = window.location.origin;
+
+// ── Pre-filled credentials ──────────────────
+const PREFILL = {
+  tdKey:    '536c483fcd0e496db29fe7220bcb7fd8',
+  igKey:    'f478c958cb0eec277641c68082da056e322df154',
+  igUser:   'ANGIO228',
+  tgToken:  '8751954889:AAFEGArqp6T8lf4zS0C8P7A7zemcM4teU3A',
+  tgChatId: '5499889900',
+};
 const LOTS  = 0.01;     // Micro lot — fixed
 const MAX_DAILY_LOSS = -10; // €
 const AUTO_CONF_THRESHOLD = 70; // %
@@ -363,15 +372,17 @@ const IG_EPICS = {
 };
 
 const PAIRS = [
-  {sym:'EURJPY', pip:2, pipVal:0.068, dec:3},
-  {sym:'GBPJPY', pip:2, pipVal:0.068, dec:3},
-  {sym:'USDJPY', pip:2, pipVal:0.068, dec:3},
-  {sym:'USDCAD', pip:4, pipVal:0.075, dec:5},
-  {sym:'EURCAD', pip:4, pipVal:0.075, dec:5},
-  {sym:'EURGBP', pip:4, pipVal:0.126, dec:5},
-  {sym:'NZDUSD', pip:4, pipVal:0.100, dec:5},
-  {sym:'GBPCAD', pip:4, pipVal:0.075, dec:5},
-  {sym:'CADJPY', pip:2, pipVal:0.068, dec:3},
+  // JPY pairs first — priority scan
+  {sym:'EURJPY', pip:2, pipVal:0.068, dec:3, priority:true},
+  {sym:'GBPJPY', pip:2, pipVal:0.068, dec:3, priority:true},
+  {sym:'USDJPY', pip:2, pipVal:0.068, dec:3, priority:true},
+  {sym:'CADJPY', pip:2, pipVal:0.068, dec:3, priority:true},
+  // Non-JPY pairs
+  {sym:'USDCAD', pip:4, pipVal:0.075, dec:5, priority:false},
+  {sym:'EURCAD', pip:4, pipVal:0.075, dec:5, priority:false},
+  {sym:'EURGBP', pip:4, pipVal:0.126, dec:5, priority:false},
+  {sym:'NZDUSD', pip:4, pipVal:0.100, dec:5, priority:false},
+  {sym:'GBPCAD', pip:4, pipVal:0.075, dec:5, priority:false},
 ];
 
 const st = {
@@ -1093,14 +1104,14 @@ function renderPositions(){
 //  CONNECT
 // ════════════════════════════════════════
 async function startLive(){
-  const tdKey=document.getElementById('tdKey').value.trim();
-  const igKey=document.getElementById('igKey').value.trim();
-  const igUser=document.getElementById('igUser').value.trim();
+  const tdKey=document.getElementById('tdKey').value.trim()||PREFILL.tdKey;
+  const igKey=document.getElementById('igKey').value.trim()||PREFILL.igKey;
+  const igUser=document.getElementById('igUser').value.trim()||PREFILL.igUser;
   const igPass=document.getElementById('igPass').value.trim();
   const env=document.getElementById('igEnv').value;
   if(tdKey){st.tdKey=tdKey;log(`Twelve Data Key: ${tdKey.slice(0,8)}…`,'s');}
-  const tgToken=document.getElementById('tgToken').value.trim();
-  const tgChatId=document.getElementById('tgChatId').value.trim();
+  const tgToken=document.getElementById('tgToken').value.trim()||PREFILL.tgToken;
+  const tgChatId=document.getElementById('tgChatId').value.trim()||PREFILL.tgChatId;
   if(tgToken&&tgChatId){
     st.telegram={botToken:tgToken,chatId:tgChatId};
     log(`📱 Telegram Alerts aktiv → Chat ${tgChatId}`,'s');
@@ -1258,27 +1269,35 @@ async function scan(){
   }
 }
 
+let lastNonJPYScan = 0;
+
 async function scanAll(){
+  const now = Date.now();
+  // JPY pairs: scan every cycle (60s)
+  // Non-JPY: scan every 3 cycles (180s) to save API credits
+  const scanNonJPY = now - lastNonJPYScan > 180000;
+  if(scanNonJPY) lastNonJPYScan = now;
+
   for(const pair of PAIRS){
-    if(pair.sym===st.pair.sym)continue;
+    if(pair.sym===st.pair.sym) continue;
+    if(!pair.priority && !scanNonJPY) continue; // skip non-JPY this cycle
     try{
       const candles=await fetchCandles(pair.sym,'15min');
-      if(!candles?.length)continue;
+      if(!candles?.length) continue;
       const last=candles[candles.length-1];
       st.candles[pair.sym]=candles;
       st.cache[pair.sym]={
         lastPrice:last.c,
         prevClose:candles[candles.length-20]?.c||candles[0].c,
-        bid:+(last.c-0.0003).toFixed(pair.dec),
-        ask:+(last.c+0.0003).toFixed(pair.dec),
-        spread:2.0,
+        bid:+(last.c-(pair.pip===2?0.03:0.00003)).toFixed(pair.dec),
+        ask:+(last.c+(pair.pip===2?0.03:0.00003)).toFixed(pair.dec),
+        spread:pair.pip===2?1.5:2.0,
       };
       const sig=computeSignal(candles,pair);
       st.signals[pair.sym]=sig;
-      // Auto trade on background pairs too
       if(st.autoMode) checkAutoTrade(sig,pair);
     }catch{}
-    await new Promise(r=>setTimeout(r,400));
+    await new Promise(r=>setTimeout(r,500));
   }
   renderPairs();
 }
@@ -1328,7 +1347,12 @@ function begin(){
 window.addEventListener('load',()=>{
   setDir('BUY');updateExecBtn();calcRR();
   ['slIn','tpIn'].forEach(id=>document.getElementById(id).addEventListener('input',calcRR));
-  log('ICT Scalper bereit','i');
+  // Prefill all credentials from PREFILL config
+  Object.entries(PREFILL).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el) el.value=val;
+  });
+  log('ICT Scalper bereit — JPY Priorität aktiv','i');
 });
 
 window.addEventListener('resize',()=>{
