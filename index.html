@@ -201,14 +201,16 @@ canvas{display:block}
     <input type="hidden" id="tgChatId">
     <input type="hidden" id="igEnv" value="live">
 
-    <div class="mfl">IG Passwort</div>
-    <input type="password" class="mfi" id="igPass" placeholder="Dein IG Passwort" autofocus>
+    <div class="mfl">IG Passwort <span style="color:var(--red)">*</span></div>
+    <input type="password" class="mfi" id="igPass" placeholder="Dein IG Passwort eingeben…" autofocus>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:-4px">Account: ANGIO228 · IG Live</div>
+    <div id="passError" style="font-family:var(--mono);font-size:9px;color:var(--red);display:none">⚠️ Bitte Passwort eingeben</div>
 
     <div style="height:1px;background:var(--border2);margin:8px 0"></div>
     <div class="warn-note">⚠️ IG Live — echtes Geld. Auto-Trading stoppt bei -€10 Tagesverlust.</div>
     <div class="modal-btns">
       <button class="mbg" onclick="startPaper()">Paper Only</button>
-      <button class="mbp" onclick="startLive()">Verbinden + Auto</button>
+      <button class="mbp" onclick="validateAndConnect()">▶ Verbinden</button>
     </div>
   </div>
 </div>
@@ -1103,6 +1105,17 @@ function renderPositions(){
 // ════════════════════════════════════════
 //  CONNECT
 // ════════════════════════════════════════
+function validateAndConnect(){
+  const pass = document.getElementById('igPass').value.trim();
+  if(!pass){
+    document.getElementById('passError').style.display='block';
+    document.getElementById('igPass').focus();
+    return;
+  }
+  document.getElementById('passError').style.display='none';
+  startLive();
+}
+
 async function startLive(){
   const tdKey=document.getElementById('tdKey').value.trim()||PREFILL.tdKey;
   const igKey=document.getElementById('igKey').value.trim()||PREFILL.igKey;
