@@ -307,21 +307,26 @@ function log(msg,type='i'){
 // ═══════════════════════════════════════
 //  TELEGRAM
 // ═══════════════════════════════════════
+const TG_CHATS = ['5499889900', '7264721144']; // Angelo + Freund
+
 async function tgSend(message){
-  try{
-    const r=await fetch(`${PROXY}/api/notify`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({botToken:TG_TOKEN,chatId:TG_CHAT,message})
-    });
-    const d=await r.json();
-    if(d.ok){
-      document.getElementById('tgStatus').className='tg-status tg-ok';
-      document.getElementById('tgStatus').textContent='📱 TG ON';
-      return true;
-    }
-  }catch(e){log(`TG: ${e.message}`,'e');}
-  return false;
+  let ok = false;
+  for(const chatId of TG_CHATS){
+    try{
+      const r=await fetch(`${PROXY}/api/notify`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({botToken:TG_TOKEN,chatId,message})
+      });
+      const d=await r.json();
+      if(d.ok) ok=true;
+    }catch(e){log(`TG ${chatId}: ${e.message}`,'e');}
+  }
+  if(ok){
+    document.getElementById('tgStatus').className='tg-status tg-ok';
+    document.getElementById('tgStatus').textContent='📱 TG 2x';
+  }
+  return ok;
 }
 
 async function sendTestTelegram(){
