@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ICT Scalper</title>
+<title>ICT Signal Bot</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -15,60 +15,47 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;height:100vh;overflow:hidden}
-
 header{height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
 .logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--bright);letter-spacing:.12em;display:flex;align-items:center;gap:8px}
-.logo-badge{font-size:9px;padding:2px 6px;border-radius:3px;letter-spacing:.08em}
-.lb-auto{background:var(--green);color:#000}
-.lb-paper{background:var(--purple);color:#fff}
-.lb-stopped{background:var(--red);color:#fff}
-.header-center{display:flex;align-items:center;gap:12px}
-.session-chip{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.header-center{display:flex;align-items:center;gap:10px}
+.sc{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid}
 .sc-lon{border-color:rgba(61,139,255,.4);color:var(--accent);background:rgba(61,139,255,.08)}
 .sc-ny{border-color:rgba(240,180,41,.4);color:var(--gold);background:rgba(240,180,41,.08)}
 .sc-tok{border-color:rgba(139,92,246,.4);color:var(--purple);background:rgba(139,92,246,.08)}
 .sc-off{border-color:var(--border2);color:var(--muted)}
-.kz-badge{font-family:var(--mono);font-size:9px;color:var(--gold);background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.3);padding:2px 8px;border-radius:3px;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.kz{font-family:var(--mono);font-size:9px;color:var(--gold);background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.3);padding:2px 8px;border-radius:3px;animation:pulse 1s infinite}
 .clock{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .header-right{display:flex;align-items:center;gap:8px}
-.balance{font-family:var(--mono);font-size:11px;color:var(--green)}
-.daily-pnl{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px}
-.dpnl-pos{color:var(--green);background:rgba(14,203,129,.1);border:1px solid rgba(14,203,129,.2)}
-.dpnl-neg{color:var(--red);background:rgba(246,70,93,.1);border:1px solid rgba(246,70,93,.2)}
-.auto-toggle{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;padding:3px 10px;border-radius:3px;border:1px solid var(--border2);transition:all .15s}
-.auto-toggle.on{color:var(--green);border-color:rgba(14,203,129,.4);background:rgba(14,203,129,.08)}
-.auto-toggle.stopped{color:var(--red);border-color:rgba(246,70,93,.4);background:rgba(246,70,93,.08)}
-.toggle-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-.pill{font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:.1em;cursor:pointer}
-.pill-off{background:rgba(246,70,93,.12);color:var(--red);border:1px solid rgba(246,70,93,.3)}
-.pill-on{background:rgba(14,203,129,.12);color:var(--green);border:1px solid rgba(14,203,129,.3)}
+.tg-status{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px}
+.tg-ok{color:var(--green);background:rgba(14,203,129,.1);border:1px solid rgba(14,203,129,.2)}
+.tg-off{color:var(--muted);background:rgba(61,77,106,.1);border:1px solid var(--border2)}
+.daily-badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px}
+.db-pos{color:var(--green);background:rgba(14,203,129,.1);border:1px solid rgba(14,203,129,.2)}
+.db-neg{color:var(--red);background:rgba(246,70,93,.1);border:1px solid rgba(246,70,93,.2)}
 
-.app{display:grid;grid-template-columns:190px 1fr 250px;height:calc(100vh - 44px)}
+.app{display:grid;grid-template-columns:200px 1fr 260px;height:calc(100vh - 44px)}
 
-.left-panel,.right-panel{background:var(--panel);overflow-y:auto;display:flex;flex-direction:column}
-.left-panel{border-right:1px solid var(--border)}
-.right-panel{border-left:1px solid var(--border)}
+/* LEFT */
+.left-panel{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
 .ph{padding:7px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.ph-val{color:var(--accent)}
-
-/* Pair rows */
-.pair-row{padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;border-left:2px solid transparent}
-.pair-row:hover{background:rgba(61,139,255,.04)}
-.pair-row.active{background:rgba(61,139,255,.06);border-left-color:var(--accent)}
+.phv{color:var(--accent)}
+.pair-row{padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;border-left:2px solid transparent}
+.pair-row:hover,.pair-row.active{background:rgba(61,139,255,.06)}
+.pair-row.active{border-left-color:var(--accent)}
 .pr-top{display:flex;justify-content:space-between}
 .pr-sym{font-family:var(--mono);font-weight:700;font-size:11px;color:var(--bright)}
 .pr-price{font-family:var(--mono);font-size:11px}
 .pr-bot{display:flex;justify-content:space-between;margin-top:2px;align-items:center}
 .pr-sp{font-family:var(--mono);font-size:8px;color:var(--muted)}
-.ict-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;font-weight:700}
-.it-buy{background:rgba(14,203,129,.15);color:var(--green)}
-.it-sell{background:rgba(246,70,93,.15);color:var(--red)}
-.it-wait{background:rgba(61,77,106,.2);color:var(--muted)}
-.it-sweep{background:rgba(240,180,41,.15);color:var(--gold)}
-.it-auto{background:rgba(61,139,255,.15);color:var(--accent)}
+.sig-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;font-weight:700}
+.st-buy{background:rgba(14,203,129,.15);color:var(--green)}
+.st-sell{background:rgba(246,70,93,.15);color:var(--red)}
+.st-wait{background:rgba(61,77,106,.2);color:var(--muted)}
+.st-sweep{background:rgba(240,180,41,.15);color:var(--gold)}
 
-/* Center */
+/* CENTER */
 .center{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
 .chart-header{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--panel);flex-shrink:0}
 .pair-title{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--bright)}
@@ -78,68 +65,57 @@ header{height:44px;background:var(--surface);border-bottom:1px solid var(--borde
 .tf-group{display:flex;gap:3px;margin-left:auto}
 .tf-btn{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);background:none;color:var(--muted);cursor:pointer}
 .tf-btn.active{background:rgba(61,139,255,.15);color:var(--accent);border-color:rgba(61,139,255,.4)}
-
-/* ICT cards */
 .ict-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:6px;flex-shrink:0}
 .ict-card{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:7px 9px}
 .icl{font-family:var(--mono);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .icv{font-family:var(--mono);font-size:12px;font-weight:700;margin-top:2px}
 .icv.bull{color:var(--green)}.icv.bear{color:var(--red)}.icv.neutral{color:var(--gold)}
 .ics{font-size:8px;color:var(--muted);margin-top:1px}
-
-/* Signal */
 .signal-row{padding:6px;flex-shrink:0}
 .sig-box{border-radius:3px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border:1px solid}
 .sb-buy{background:rgba(14,203,129,.06);border-color:rgba(14,203,129,.25)}
 .sb-sell{background:rgba(246,70,93,.06);border-color:rgba(246,70,93,.25)}
 .sb-wait{background:rgba(61,77,106,.06);border-color:rgba(61,77,106,.2)}
 .sb-sweep{background:rgba(240,180,41,.06);border-color:rgba(240,180,41,.3)}
-.sb-auto{background:rgba(61,139,255,.06);border-color:rgba(61,139,255,.3)}
 .sm{font-family:var(--mono);font-weight:700;font-size:14px}
-.sm-buy{color:var(--green)}.sm-sell{color:var(--red)}.sm-wait{color:var(--muted)}.sm-sweep{color:var(--gold)}.sm-auto{color:var(--accent)}
+.sm-buy{color:var(--green)}.sm-sell{color:var(--red)}.sm-wait{color:var(--muted)}.sm-sweep{color:var(--gold)}
 .ss{font-size:10px;color:var(--muted);margin-top:1px}
 .conf-wrap{text-align:right}
 .conf-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--bright)}
 .conf-bar{width:60px;height:3px;background:var(--border2);border-radius:2px;margin-top:3px;overflow:hidden;margin-left:auto}
 .cf{height:100%;border-radius:2px;transition:width .4s}
 .cf-h{background:var(--green)}.cf-m{background:var(--gold)}.cf-l{background:var(--red)}
-
-/* Chart */
+.kz-label{font-family:var(--mono);font-size:8px;color:var(--gold);margin-top:2px}
 .chart-wrap{flex:1;position:relative;overflow:hidden;padding:2px 6px}
 canvas{display:block}
 .chart-legend{position:absolute;top:6px;left:10px;display:flex;gap:10px}
 .cli{font-family:var(--mono);font-size:8px;display:flex;align-items:center;gap:3px;color:var(--muted)}
 .cld{width:8px;height:2px;border-radius:1px}
-
-/* Auto trade log */
 .auto-log{padding:4px 8px;background:rgba(61,139,255,.04);border-bottom:1px solid rgba(61,139,255,.1);font-family:var(--mono);font-size:9px;color:var(--accent);min-height:22px;flex-shrink:0}
 
-/* Order form */
-.order-form{padding:10px 12px;display:flex;flex-direction:column;gap:7px}
-.fl{font-family:var(--mono);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
-.fi{background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:6px 8px;color:var(--bright);font-family:var(--mono);font-size:11px;outline:none;width:100%}
-.fi:focus{border-color:var(--accent)}
-.dir-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.dir-btn{padding:7px;border-radius:3px;border:1px solid var(--border2);background:none;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;color:var(--muted)}
-.dir-btn.buy.on{background:rgba(14,203,129,.15);color:var(--green);border-color:rgba(14,203,129,.4)}
-.dir-btn.sell.on{background:rgba(246,70,93,.15);color:var(--red);border-color:rgba(246,70,93,.4)}
-.spread-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
-.sc{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 7px;text-align:center}
-.scl{font-family:var(--mono);font-size:8px;color:var(--muted)}
-.scv{font-family:var(--mono);font-size:13px;font-weight:700;margin-top:1px}
-.scv-b{color:var(--red)}.scv-a{color:var(--green)}.scv-s{color:var(--gold)}
-.lot-info{background:rgba(61,139,255,.05);border:1px solid rgba(61,139,255,.12);border-radius:3px;padding:6px 8px;font-family:var(--mono);font-size:9px;color:var(--accent)}
-.rrbox{background:rgba(14,203,129,.04);border:1px solid rgba(14,203,129,.12);border-radius:3px;padding:6px 8px;font-family:var(--mono);font-size:9px;display:flex;justify-content:space-between}
-.exec-btn{padding:10px;border-radius:3px;border:none;font-family:var(--mono);font-weight:700;font-size:12px;cursor:pointer;width:100%}
-.exec-btn.buy{background:var(--green);color:#000}
-.exec-btn.sell{background:var(--red);color:#fff}
-.exec-btn:disabled{opacity:.4;cursor:not-allowed}
-.auto-btn{padding:8px;border-radius:3px;border:1px solid;font-family:var(--mono);font-weight:700;font-size:10px;cursor:pointer;width:100%;background:none;transition:all .15s}
-.auto-btn.off{color:var(--muted);border-color:var(--border2)}
-.auto-btn.on{color:var(--green);border-color:rgba(14,203,129,.4);background:rgba(14,203,129,.06)}
-.auto-btn.stopped{color:var(--red);border-color:rgba(246,70,93,.4);background:rgba(246,70,93,.06)}
+/* RIGHT */
+.right-panel{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
 
-/* Levels */
+/* SIGNAL DETAIL */
+.sig-detail-box{padding:12px;display:flex;flex-direction:column;gap:8px}
+.sdb-title{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.sdb-main{font-family:var(--mono);font-size:20px;font-weight:700}
+.sdb-main.buy{color:var(--green)}.sdb-main.sell{color:var(--red)}.sdb-main.wait{color:var(--muted)}.sdb-main.sweep{color:var(--gold)}
+.sdb-sub{font-size:11px;color:var(--muted)}
+.entry-box{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:10px 12px}
+.eb-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border)}
+.eb-row:last-child{border-bottom:none}
+.eb-label{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.eb-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--bright)}
+.eb-val.green{color:var(--green)}.eb-val.red{color:var(--red)}.eb-val.gold{color:var(--gold)}
+.tg-send-btn{width:100%;padding:10px;border-radius:3px;border:none;font-family:var(--mono);font-weight:700;font-size:11px;cursor:pointer;transition:opacity .15s}
+.tg-send-btn.buy{background:var(--green);color:#000}
+.tg-send-btn.sell{background:var(--red);color:#fff}
+.tg-send-btn.wait{background:var(--border2);color:var(--muted);cursor:not-allowed}
+.tg-manual-btn{width:100%;padding:8px;border-radius:3px;border:1px solid var(--border2);background:none;font-family:var(--mono);font-size:10px;color:var(--muted);cursor:pointer}
+.tg-manual-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* LEVELS */
 .lv-row{padding:5px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:9px}
 .lv-type{font-size:8px;padding:1px 4px;border-radius:2px}
 .lv-fvgb{background:rgba(14,203,129,.12);color:var(--green)}
@@ -150,94 +126,36 @@ canvas{display:block}
 .lv-price{color:var(--bright)}
 .lv-dist{color:var(--muted);font-size:8px}
 
-/* Positions */
-.pos-row{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
-.pos-top{display:flex;justify-content:space-between;align-items:center}
-.pos-sym{font-family:var(--mono);font-weight:700;font-size:10px}
-.pos-pnl{font-family:var(--mono);font-size:11px;font-weight:700}
-.pos-pos{color:var(--green)}.pos-neg{color:var(--red)}
-.pos-det{font-family:var(--mono);font-size:8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
-.cbtn{font-size:8px;padding:1px 5px;border-radius:2px;border:1px solid var(--border2);background:none;color:var(--muted);cursor:pointer;font-family:var(--mono)}
-.cbtn:hover{border-color:var(--red);color:var(--red)}
-
-/* Log */
+/* LOG */
 .log-row{padding:4px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px;display:flex;gap:6px}
 .lt{color:var(--muted);flex-shrink:0}
-.lm-s{color:var(--green)}.lm-e{color:var(--red)}.lm-i{color:var(--text)}.lm-w{color:var(--gold)}.lm-ict{color:var(--cyan)}.lm-auto{color:var(--accent)}
+.lm-s{color:var(--green)}.lm-e{color:var(--red)}.lm-i{color:var(--text)}.lm-w{color:var(--gold)}.lm-ict{color:var(--cyan)}.lm-tg{color:var(--purple)}
 
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);z-index:999;display:flex;align-items:center;justify-content:center}
-.modal{background:var(--panel);border:1px solid var(--border2);border-radius:6px;width:420px;padding:26px}
-.modal-title{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--bright);margin-bottom:4px}
-.modal-sub{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.6}
-.mfl{font-family:var(--mono);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
-.mfi{background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:7px 9px;color:var(--bright);font-family:var(--mono);font-size:11px;outline:none;width:100%;margin-bottom:8px}
-.api-note{background:rgba(61,139,255,.06);border:1px solid rgba(61,139,255,.2);border-radius:3px;padding:8px 10px;font-size:10px;color:var(--accent);line-height:1.5;margin-bottom:10px;font-family:var(--mono)}
-.warn-note{background:rgba(246,70,93,.06);border:1px solid rgba(246,70,93,.2);border-radius:3px;padding:8px 10px;font-size:10px;color:var(--red);line-height:1.5}
-.modal-btns{display:flex;gap:8px;margin-top:14px}
-.mbp{flex:1;padding:9px;background:var(--accent);color:#fff;border:none;border-radius:3px;font-family:var(--mono);font-weight:700;font-size:11px;cursor:pointer}
-.mbg{flex:1;padding:9px;background:none;color:var(--muted);border:1px solid var(--border2);border-radius:3px;font-family:var(--mono);font-size:11px;cursor:pointer}
-.divider{height:1px;background:var(--border);flex-shrink:0}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.divider{height:1px;background:var(--border);flex-shrink:0}
 </style>
 </head>
 <body>
-
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <div class="modal-title">⚡ ICT SCALPER</div>
-    <p class="modal-sub">Priorität: EURJPY · GBPJPY · USDJPY · CADJPY<br>Mini Pairs · 0.01 Lots · <b style='color:var(--gold)'>Erst Demo testen!</b></p>
-    <div class="api-note">
-      ✅ Twelve Data · IG Live · Telegram — alle voreingestellt<br>
-      Nur IG Passwort eingeben und verbinden.
-    </div>
-
-    <!-- Hidden fields - prefilled by JS -->
-    <input type="hidden" id="tdKey">
-    <input type="hidden" id="igKey">
-    <input type="hidden" id="igUser">
-    <input type="hidden" id="tgToken">
-    <input type="hidden" id="tgChatId">
-    <input type="hidden" id="igEnv" value="demo">
-
-    <div class="mfl">IG Passwort <span style="color:var(--red)">*</span></div>
-    <input type="password" class="mfi" id="igPass" placeholder="Dein IG Passwort eingeben…" autofocus>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:-4px">Account: Blay7s · IG Demo</div>
-    <div id="passError" style="font-family:var(--mono);font-size:9px;color:var(--red);display:none">⚠️ Bitte Passwort eingeben</div>
-
-    <div style="height:1px;background:var(--border2);margin:8px 0"></div>
-    <div class="warn-note">⚠️ IG Live — echtes Geld. Auto-Trading stoppt bei -€10 Tagesverlust.</div>
-    <div class="modal-btns">
-      <button class="mbg" onclick="startPaper()">Paper Only</button>
-      <button class="mbp" onclick="validateAndConnect()">▶ Verbinden</button>
-    </div>
-  </div>
-</div>
-
 <header>
-  <div class="logo">ICT SCALPER <span class="logo-badge lb-paper" id="modeBadge">PAPER</span></div>
+  <div class="logo"><div class="logo-dot"></div>ICT SIGNAL BOT</div>
   <div class="header-center">
-    <div class="session-chip sc-off" id="sTok">TYO</div>
-    <div class="session-chip sc-off" id="sLon">LON</div>
-    <div class="session-chip sc-off" id="sNY">NY</div>
-    <div class="kz-badge" id="kzBadge" style="display:none">🎯 KILL ZONE</div>
+    <div class="sc sc-off" id="sTok">TYO</div>
+    <div class="sc sc-off" id="sLon">LON</div>
+    <div class="sc sc-off" id="sNY">NY</div>
+    <div class="kz" id="kzBadge" style="display:none">🎯 KILL ZONE</div>
     <div class="clock" id="clock">--:--:-- UTC</div>
   </div>
   <div class="header-right">
-    <div class="daily-pnl dpnl-pos" id="dailyPnl">Day: €0.00</div>
-    <div class="balance" id="balEl" style="display:none"></div>
-    <div class="auto-toggle off" id="autoToggle" onclick="toggleAuto()">
-      <div class="toggle-dot"></div>AUTO OFF
-    </div>
-    <div class="pill pill-off" id="connPill" onclick="document.getElementById('modal').style.display='flex'">DISCONNECTED</div>
+    <div class="daily-badge db-pos" id="sigCount">Signale: 0</div>
+    <div class="tg-status tg-off" id="tgStatus">📱 TG OFF</div>
   </div>
 </header>
 
 <div class="app">
   <!-- LEFT: PAIRS -->
   <div class="left-panel">
-    <div class="ph">Mini Pairs <span class="ph-val">0.01L</span></div>
+    <div class="ph">JPY Pairs <span class="phv">9</span></div>
     <div id="pairList"></div>
   </div>
 
@@ -254,14 +172,12 @@ canvas{display:block}
         <button class="tf-btn" id="tf4h" onclick="setTF('4h')">4H</button>
       </div>
     </div>
-
     <div class="ict-row">
       <div class="ict-card"><div class="icl">Market Structure</div><div class="icv neutral" id="iMS">—</div><div class="ics" id="iMSs">—</div></div>
       <div class="ict-card"><div class="icl">Fair Value Gap</div><div class="icv neutral" id="iFVG">—</div><div class="ics" id="iFVGs">—</div></div>
       <div class="ict-card"><div class="icl">Order Block</div><div class="icv neutral" id="iOB">—</div><div class="ics" id="iOBs">—</div></div>
       <div class="ict-card"><div class="icl">Liquidity</div><div class="icv neutral" id="iLIQ">—</div><div class="ics" id="iLIQs">—</div></div>
     </div>
-
     <div class="signal-row">
       <div class="sig-box sb-wait" id="sigBox">
         <div>
@@ -271,13 +187,11 @@ canvas{display:block}
         <div class="conf-wrap">
           <div class="conf-num" id="confNum">0%</div>
           <div class="conf-bar"><div class="cf cf-l" id="confFill" style="width:0%"></div></div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:2px" id="kzLabel"></div>
+          <div class="kz-label" id="kzLabel"></div>
         </div>
       </div>
     </div>
-
-    <div class="auto-log" id="autoLog">⏳ Warte auf Signal…</div>
-
+    <div class="auto-log" id="autoLog">⏳ Scanne Märkte…</div>
     <div class="chart-wrap" id="chartWrap">
       <canvas id="mainChart"></canvas>
       <div class="chart-legend">
@@ -286,212 +200,259 @@ canvas{display:block}
         <div class="cli"><div class="cld" style="background:var(--red)"></div>EMA21</div>
         <div class="cli"><div class="cld" style="background:var(--gold)"></div>FVG</div>
         <div class="cli"><div class="cld" style="background:var(--accent)"></div>OB</div>
-        <div class="cli"><div class="cld" style="background:rgba(246,70,93,.6);border-top:1px dashed var(--red)"></div>BSL</div>
-        <div class="cli"><div class="cld" style="background:rgba(14,203,129,.6);border-top:1px dashed var(--green)"></div>SSL</div>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT: SIGNAL DETAIL + LEVELS + LOG -->
   <div class="right-panel">
-    <div class="ph">Order Entry</div>
-    <div class="order-form">
+    <div class="ph">Signal Detail</div>
+    <div class="sig-detail-box">
       <div>
-        <div class="fl">Direction</div>
-        <div class="dir-seg">
-          <button class="dir-btn buy on" id="btnBuy" onclick="setDir('BUY')">▲ BUY</button>
-          <button class="dir-btn sell" id="btnSell" onclick="setDir('SELL')">▼ SELL</button>
-        </div>
+        <div class="sdb-title">Aktuelles Signal</div>
+        <div class="sdb-main wait" id="sdbMain">WAIT</div>
+        <div class="sdb-sub" id="sdbSub">Kein Setup</div>
       </div>
-      <div>
-        <div class="fl">Pair</div>
-        <select class="fi" id="orderPair" onchange="selectPair(this.value)">
-          <option>EURJPY</option><option>GBPJPY</option><option>USDJPY</option>
-          <option>CADJPY</option><option>USDCAD</option><option>EURCAD</option>
-          <option>EURGBP</option><option>NZDUSD</option><option>GBPCAD</option>
-        </select>
+      <div class="entry-box">
+        <div class="eb-row"><span class="eb-label">Pair</span><span class="eb-val" id="ebPair">EURJPY</span></div>
+        <div class="eb-row"><span class="eb-label">Entry</span><span class="eb-val gold" id="ebEntry">—</span></div>
+        <div class="eb-row"><span class="eb-label">SL (15p)</span><span class="eb-val red" id="ebSL">—</span></div>
+        <div class="eb-row"><span class="eb-label">TP (30p)</span><span class="eb-val green" id="ebTP">—</span></div>
+        <div class="eb-row"><span class="eb-label">Spread</span><span class="eb-val gold" id="ebSpread">—</span></div>
+        <div class="eb-row"><span class="eb-label">R:R</span><span class="eb-val" id="ebRR">1:2</span></div>
+        <div class="eb-row"><span class="eb-label">Confidence</span><span class="eb-val" id="ebConf">—</span></div>
+        <div class="eb-row"><span class="eb-label">Setup</span><span class="eb-val" id="ebSetup" style="font-size:8px;text-align:right;max-width:130px">—</span></div>
       </div>
-      <div class="lot-info" id="lotInfo">Micro Lot: 0.01 · Mini Pair · Spread inkl.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-        <div><div class="fl">SL (Pips)</div><input type="number" class="fi" id="slIn" value="15" min="3" onchange="calcRR()"></div>
-        <div><div class="fl">TP (Pips)</div><input type="number" class="fi" id="tpIn" value="30" min="5" onchange="calcRR()"></div>
-      </div>
-      <div class="spread-row">
-        <div class="sc"><div class="scl">BID</div><div class="scv scv-b" id="bidEl">—</div></div>
-        <div class="sc"><div class="scl">SPREAD</div><div class="scv scv-s" id="spEl">—</div></div>
-        <div class="sc"><div class="scl">ASK</div><div class="scv scv-a" id="askEl">—</div></div>
-      </div>
-      <div class="rrbox">
-        <span>SL <span id="rrSL" style="color:var(--red)">—</span></span>
-        <span>TP <span id="rrTP" style="color:var(--green)">—</span></span>
-        <span>R:R <span id="rrRR" style="color:var(--bright)">—</span></span>
-        <span>Spread cost <span id="rrSP" style="color:var(--gold)">—</span></span>
-      </div>
-      <button class="exec-btn buy" id="execBtn" onclick="placeOrder(false)">▲ BUY EURJPY</button>
-      <button class="auto-btn off" id="autoBtn" onclick="toggleAuto()">⚡ AUTO TRADING OFF</button>
+      <button class="tg-send-btn wait" id="tgSendBtn" onclick="sendSignalToTelegram()">
+        📱 Signal an Telegram senden
+      </button>
+      <button class="tg-manual-btn" onclick="sendTestTelegram()">
+        Test Nachricht senden
+      </button>
     </div>
 
     <div class="divider"></div>
-    <div class="ph">ICT Levels <span class="ph-val" id="lvCount">0</span></div>
+    <div class="ph">ICT Levels <span class="phv" id="lvCount">0</span></div>
     <div id="lvList"></div>
 
     <div class="divider"></div>
-    <div class="ph">Positions <span class="ph-val" id="posPnlEl">€0.00</span></div>
-    <div id="posList" style="min-height:40px">
-      <div style="padding:12px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:9px">Keine Positionen</div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="ph">Log</div>
+    <div class="ph">Signal Log</div>
     <div id="logList" style="overflow-y:auto;flex:1;min-height:60px"></div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════
-//  CONFIG
-// ════════════════════════════════════════
-const PROXY = window.location.origin;
-
-// ── Pre-filled credentials ──────────────────
-const PREFILL = {
-  tdKey:    '536c483fcd0e496db29fe7220bcb7fd8',
-  igKey:    '2b1076ce4e24e282f4e4e5467cc6db847efed7f1', // Demo key
-  igUser:   'Blay7s',                                   // Demo username
-  tgToken:  '8751954889:AAFEGArqp6T8lf4zS0C8P7A7zemcM4teU3A',
-  tgChatId: '5499889900',
-};
-const LOTS  = 0.01;     // Micro lot — fixed
-const MAX_DAILY_LOSS = -10; // €
-const AUTO_CONF_THRESHOLD = 70; // %
-const MAX_SPREAD_PIPS = 3; // Don't trade if spread > 3 pips
-
-// IG Mini pair epics
-const IG_EPICS = {
-  EURJPY:'CS.D.EURJPY.MINI.IP', GBPJPY:'CS.D.GBPJPY.MINI.IP', USDJPY:'CS.D.USDJPY.MINI.IP',
-  USDCAD:'CS.D.USDCAD.MINI.IP', EURCAD:'CS.D.EURCAD.MINI.IP', EURGBP:'CS.D.EURGBP.MINI.IP',
-  NZDUSD:'CS.D.NZDUSD.MINI.IP', GBPCAD:'CS.D.GBPCAD.MINI.IP', CADJPY:'CS.D.CADJPY.MINI.IP',
-};
+// ═══════════════════════════════════════
+//  CONFIG — alle Keys hardcoded
+// ═══════════════════════════════════════
+const PROXY   = window.location.origin;
+const TD_KEY  = '536c483fcd0e496db29fe7220bcb7fd8';
+const TG_TOKEN  = '8751954889:AAFEGArqp6T8lf4zS0C8P7A7zemcM4teU3A';
+const TG_CHAT   = '5499889900';
+const SL_PIPS = 15;
+const TP_PIPS = 30;
 
 const PAIRS = [
-  // JPY pairs first — priority scan
-  {sym:'EURJPY', pip:2, pipVal:0.068, dec:3, priority:true},
-  {sym:'GBPJPY', pip:2, pipVal:0.068, dec:3, priority:true},
-  {sym:'USDJPY', pip:2, pipVal:0.068, dec:3, priority:true},
-  {sym:'CADJPY', pip:2, pipVal:0.068, dec:3, priority:true},
-  // Non-JPY pairs
-  {sym:'USDCAD', pip:4, pipVal:0.075, dec:5, priority:false},
-  {sym:'EURCAD', pip:4, pipVal:0.075, dec:5, priority:false},
-  {sym:'EURGBP', pip:4, pipVal:0.126, dec:5, priority:false},
-  {sym:'NZDUSD', pip:4, pipVal:0.100, dec:5, priority:false},
-  {sym:'GBPCAD', pip:4, pipVal:0.075, dec:5, priority:false},
+  {sym:'EURJPY', pip:2, dec:3, spread:1.5, priority:true},
+  {sym:'GBPJPY', pip:2, dec:3, spread:2.5, priority:true},
+  {sym:'USDJPY', pip:2, dec:3, spread:1.2, priority:true},
+  {sym:'CADJPY', pip:2, dec:3, spread:2.0, priority:true},
+  {sym:'USDCAD', pip:4, dec:5, spread:2.0, priority:false},
+  {sym:'EURCAD', pip:4, dec:5, spread:2.5, priority:false},
+  {sym:'EURGBP', pip:4, dec:5, spread:1.8, priority:false},
+  {sym:'NZDUSD', pip:4, dec:5, spread:2.0, priority:false},
+  {sym:'GBPCAD', pip:4, dec:5, spread:3.0, priority:false},
 ];
 
 const st = {
-  mode:'paper', env:'demo', tdKey:'536c483fcd0e496db29fe7220bcb7fd8',
-  igConnected:false, autoMode:false, dailyStopped:false,
-  pair:PAIRS[0], tf:'15min', dir:'BUY',
-  candles:{}, cache:{}, signals:{}, emaF:{}, emaS:{}, fvgs:{}, obs:{}, liqs:{}, sweeps:{},
-  positions:[], dailyPnl:0, tradesPlaced:0,
-  lastAutoTrade:{}, _lastLoggedConf:0,
-  pendingOrders: new Set(),
-  telegram: { botToken: '', chatId: '' },
-  igToken: null,
-  igAccountId: null,
-  igCredentials: null,
+  pair: PAIRS[0], tf: '15min',
+  candles:{}, cache:{}, signals:{},
+  emaF:{}, emaS:{}, fvgs:{}, obs:{}, liqs:{}, sweeps:{},
+  currentSig: {dir:'wait', conf:0},
+  signalCount: 0,
+  lastTgSignal: {},
 };
 
-// ════════════════════════════════════════
-//  CLOCK + SESSIONS
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════
 setInterval(()=>{
-  const h=new Date().getUTCHours(), m=new Date().getUTCMinutes(), s=new Date().getUTCSeconds();
+  const h=new Date().getUTCHours(),m=new Date().getUTCMinutes(),s=new Date().getUTCSeconds();
   const pad=n=>String(n).padStart(2,'0');
   document.getElementById('clock').textContent=`${pad(h)}:${pad(m)}:${pad(s)} UTC`;
-  const tok=h>=0&&h<9, lon=h>=7&&h<16, ny=h>=12&&h<21;
-  const set=(id,on,cls)=>{ document.getElementById(id).className=`session-chip ${on?cls:'sc-off'}`; };
-  set('sTok',tok,'sc-tok'); set('sLon',lon,'sc-lon'); set('sNY',ny,'sc-ny');
+  const tok=h>=0&&h<9,lon=h>=7&&h<16,ny=h>=12&&h<21;
+  const set=(id,on,cls)=>document.getElementById(id).className=`sc ${on?cls:'sc-off'}`;
+  set('sTok',tok,'sc-tok');set('sLon',lon,'sc-lon');set('sNY',ny,'sc-ny');
   const inKZ=(h===7)||(h===8&&m<30)||(h===12)||(h===13&&m<30)||(h===0)||(h===1&&m<30);
-  const kzEl=document.getElementById('kzBadge');
-  if(inKZ){ kzEl.style.display='block'; kzEl.textContent=`🎯 ${h>=12&&h<14?'NY':h>=7&&h<9?'LONDON':'TOKYO'} KILL ZONE`; }
-  else kzEl.style.display='none';
+  const kb=document.getElementById('kzBadge');
+  if(inKZ){kb.style.display='block';kb.textContent=`🎯 ${h>=12&&h<14?'NY':h>=7&&h<9?'LONDON':'TOKYO'} KILL ZONE`;}
+  else kb.style.display='none';
   document.getElementById('kzLabel').textContent=inKZ?'Kill Zone aktiv':'';
 },1000);
 
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  LOG
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 function log(msg,type='i'){
   const el=document.getElementById('logList');
   const t=new Date(),pad=n=>String(n).padStart(2,'0');
   const ts=`${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
-  const row=document.createElement('div'); row.className='log-row';
+  const row=document.createElement('div');row.className='log-row';
   row.innerHTML=`<span class="lt">${ts}</span><span class="lm-${type}">${msg}</span>`;
   el.insertBefore(row,el.firstChild);
-  if(el.children.length>150)el.removeChild(el.lastChild);
+  if(el.children.length>100)el.removeChild(el.lastChild);
 }
 
-function autoLog(msg){ document.getElementById('autoLog').textContent=msg; }
-
-// ════════════════════════════════════════
-//  TWELVE DATA
-// ════════════════════════════════════════
-async function fetchCandles(sym, interval){
-  if(!st.tdKey) return genDemo(sym);
+// ═══════════════════════════════════════
+//  TELEGRAM
+// ═══════════════════════════════════════
+async function tgSend(message){
   try{
-    const url=`https://api.twelvedata.com/time_series?symbol=${sym}&interval=${interval}&outputsize=150&apikey=${st.tdKey}&format=JSON`;
+    const r=await fetch(`${PROXY}/api/notify`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({botToken:TG_TOKEN,chatId:TG_CHAT,message})
+    });
+    const d=await r.json();
+    if(d.ok){
+      document.getElementById('tgStatus').className='tg-status tg-ok';
+      document.getElementById('tgStatus').textContent='📱 TG ON';
+      return true;
+    }
+  }catch(e){log(`TG: ${e.message}`,'e');}
+  return false;
+}
+
+async function sendTestTelegram(){
+  log('Test Nachricht wird gesendet…','tg');
+  const ok=await tgSend('✅ ICT Signal Bot verbunden!\nTelegram Alerts aktiv.');
+  if(ok) log('✅ Test Nachricht gesendet','s');
+  else log('❌ Test fehlgeschlagen','e');
+}
+
+async function sendSignalToTelegram(){
+  const sig=st.currentSig;
+  const pair=st.pair;
+  if(sig.dir==='wait'||sig.conf<70){
+    log('Kein starkes Signal zum Senden','w');
+    return;
+  }
+  const d=st.cache[pair.sym];
+  const price=d?.lastPrice||0;
+  const pip=pair.pip===2?0.01:0.0001;
+  const sp=pair.spread*pip;
+  const entry=sig.dir==='buy'?+(price+sp/2).toFixed(pair.dec):+(price-sp/2).toFixed(pair.dec);
+  const sl=sig.dir==='buy'?+(entry-SL_PIPS*pip).toFixed(pair.dec):+(entry+SL_PIPS*pip).toFixed(pair.dec);
+  const tp=sig.dir==='buy'?+(entry+TP_PIPS*pip).toFixed(pair.dec):+(entry-TP_PIPS*pip).toFixed(pair.dec);
+  const h=new Date().getUTCHours(),m=new Date().getUTCMinutes();
+  const inKZ=(h===7)||(h===8&&m<30)||(h===12)||(h===13&&m<30);
+
+  const msg=
+    `${sig.dir==='buy'?'🟢 BUY':'🔴 SELL'} ${sig.sweep?'⚡ SWEEP ':''}<b>${pair.sym}</b>\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `Entry: <b>${entry}</b>\n` +
+    `SL: ${sl} (-${SL_PIPS}p)\n` +
+    `TP: ${tp} (+${TP_PIPS}p)\n` +
+    `R:R: 1:${(TP_PIPS/SL_PIPS).toFixed(1)}\n` +
+    `Spread: ${pair.spread}p\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `Conf: ${sig.conf}%\n` +
+    `Setup: ${sig.detail}\n` +
+    `TF: ${st.tf}\n` +
+    `${inKZ?'🎯 Kill Zone aktiv\n':''}` +
+    `${new Date().toUTCString()}`;
+
+  log(`Signal senden: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}%`,'tg');
+  const ok=await tgSend(msg);
+  if(ok){
+    log(`✅ Signal gesendet: ${sig.dir.toUpperCase()} ${pair.sym}`,'s');
+    st.signalCount++;
+    document.getElementById('sigCount').textContent=`Signale: ${st.signalCount}`;
+    st.lastTgSignal[pair.sym]=Date.now();
+  }
+}
+
+// Auto-send strong signals
+async function autoSendSignal(sig, pair){
+  if(sig.dir==='wait'||sig.conf<75) return;
+  const lastSent=st.lastTgSignal[pair.sym]||0;
+  if(Date.now()-lastSent < 30*60*1000) return; // 30min cooldown
+  st.lastTgSignal[pair.sym]=Date.now();
+  
+  const d=st.cache[pair.sym];
+  const price=d?.lastPrice||0;
+  const pip=pair.pip===2?0.01:0.0001;
+  const sp=pair.spread*pip;
+  const entry=sig.dir==='buy'?+(price+sp/2).toFixed(pair.dec):+(price-sp/2).toFixed(pair.dec);
+  const sl=sig.dir==='buy'?+(entry-SL_PIPS*pip).toFixed(pair.dec):+(entry+SL_PIPS*pip).toFixed(pair.dec);
+  const tp=sig.dir==='buy'?+(entry+TP_PIPS*pip).toFixed(pair.dec):+(entry-TP_PIPS*pip).toFixed(pair.dec);
+  const h=new Date().getUTCHours(),m=new Date().getUTCMinutes();
+  const inKZ=(h===7)||(h===8&&m<30)||(h===12)||(h===13&&m<30);
+
+  const msg=
+    `🤖 AUTO SIGNAL\n` +
+    `${sig.dir==='buy'?'🟢 BUY':'🔴 SELL'} ${sig.sweep?'⚡ SWEEP ':''}<b>${pair.sym}</b>\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `Entry: <b>${entry}</b>\n` +
+    `SL: ${sl} (-${SL_PIPS}p)\n` +
+    `TP: ${tp} (+${TP_PIPS}p)\n` +
+    `Spread: ${pair.spread}p\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `Conf: ${sig.conf}%\n` +
+    `Setup: ${sig.detail}\n` +
+    `${inKZ?'🎯 Kill Zone\n':''}` +
+    `${new Date().toUTCString()}`;
+
+  const ok=await tgSend(msg);
+  if(ok){
+    st.signalCount++;
+    document.getElementById('sigCount').textContent=`Signale: ${st.signalCount}`;
+    log(`🤖 Auto Signal: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}%`,'tg');
+    document.getElementById('autoLog').textContent=`📱 Signal gesendet: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}% @ ${new Date().toLocaleTimeString()}`;
+  }
+}
+
+// ═══════════════════════════════════════
+//  TWELVE DATA
+// ═══════════════════════════════════════
+async function fetchCandles(sym, interval){
+  try{
+    const url=`https://api.twelvedata.com/time_series?symbol=${sym}&interval=${interval}&outputsize=150&apikey=${TD_KEY}&format=JSON`;
     const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
     const data=await r.json();
-    if(data.status==='error'||!data.values) throw new Error(data.message||'No data — check symbol format');
+    if(data.status==='error'||!data.values) throw new Error(data.message||'No data');
     return data.values.reverse().map(v=>({
       t:new Date(v.datetime).getTime(),
-      o:parseFloat(v.open), h:parseFloat(v.high),
-      l:parseFloat(v.low),  c:parseFloat(v.close),
+      o:parseFloat(v.open),h:parseFloat(v.high),
+      l:parseFloat(v.low),c:parseFloat(v.close),
     }));
   }catch(e){
-    log(`TD ${sym}: ${e.message}`,'w');
     return genDemo(sym);
   }
 }
 
-async function fetchRTPrice(sym){
-  if(!st.tdKey) return null;
+async function fetchRT(sym){
   try{
-    const r=await fetch(`https://api.twelvedata.com/price?symbol=${sym}&apikey=${st.tdKey}`,{signal:AbortSignal.timeout(5000)});
+    const r=await fetch(`https://api.twelvedata.com/price?symbol=${sym}&apikey=${TD_KEY}`,{signal:AbortSignal.timeout(5000)});
     const d=await r.json();
     return parseFloat(d.price)||null;
-  }catch{ return null; }
-}
-
-async function fetchBidAsk(sym){
-  if(!st.tdKey) return null;
-  try{
-    const r=await fetch(`https://api.twelvedata.com/quote?symbol=${sym}&apikey=${st.tdKey}`,{signal:AbortSignal.timeout(5000)});
-    const d=await r.json();
-    if(!d.close) return null;
-    const price=parseFloat(d.close);
-    const pip=PAIRS.find(p=>p.sym===sym)?.pip===2?0.01:0.0001;
-    // Typical spreads per pair
-    const spreads={EURJPY:1.5,GBPJPY:2.5,USDJPY:1.2,USDCAD:2.0,EURCAD:2.5,EURGBP:1.8,NZDUSD:2.0,GBPCAD:3.0,CADJPY:2.0};
-    const sp=(spreads[sym]||2.0)*pip;
-    return{bid:+(price-sp/2).toFixed(6), ask:+(price+sp/2).toFixed(6), spread:spreads[sym]||2.0};
-  }catch{ return null; }
+  }catch{return null;}
 }
 
 function genDemo(sym){
-  const b={EURJPY:185.9,GBPJPY:215.3,USDJPY:160.0,USDCAD:1.396,EURCAD:1.620,EURGBP:0.863,NZDUSD:0.614,GBPCAD:1.723,CADJPY:114.7}[sym]||1.0;
-  let p=b; const pair=PAIRS.find(x=>x.sym===sym);
+  const b={EURJPY:185.9,GBPJPY:215.3,USDJPY:160.0,CADJPY:114.7,USDCAD:1.396,EURCAD:1.620,EURGBP:0.863,NZDUSD:0.614,GBPCAD:1.723}[sym]||1.0;
+  let p=b;const pair=PAIRS.find(x=>x.sym===sym);
   return Array.from({length:150},(_,i)=>{
     const o=p,m=(Math.random()-.499)*b*.0012,c=+(o+m).toFixed(pair?.dec||5);
     const h=+(Math.max(o,c)+Math.random()*b*.0004).toFixed(pair?.dec||5);
     const l=+(Math.min(o,c)-Math.random()*b*.0004).toFixed(pair?.dec||5);
-    p=c; return{t:Date.now()-(149-i)*15*60000,o,h,l,c};
+    p=c;return{t:Date.now()-(149-i)*15*60000,o,h,l,c};
   });
 }
 
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  INDICATORS
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 function ema(d,p){const k=2/(p+1);const e=[d[0]];for(let i=1;i<d.length;i++)e.push(d[i]*k+e[i-1]*(1-k));return e;}
 function rsi(d,p=14){
   if(d.length<p+1)return d.map(()=>50);
@@ -502,143 +463,95 @@ function rsi(d,p=14){
   return r;
 }
 
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  ICT ENGINE
-// ════════════════════════════════════════
-function detectFVG(candles){
-  const fvgs=[];
-  for(let i=2;i<candles.length;i++){
-    const a=candles[i-2],b=candles[i-1],c=candles[i];
-    if(c.l>a.h) fvgs.push({type:'bull',top:c.l,bottom:a.h,mid:(c.l+a.h)/2,idx:i,age:candles.length-i});
-    if(c.h<a.l) fvgs.push({type:'bear',top:a.l,bottom:c.h,mid:(a.l+c.h)/2,idx:i,age:candles.length-i});
+// ═══════════════════════════════════════
+function detectFVG(c){
+  const f=[];
+  for(let i=2;i<c.length;i++){
+    const a=c[i-2],b=c[i-1],x=c[i];
+    if(x.l>a.h)f.push({type:'bull',top:x.l,bottom:a.h,mid:(x.l+a.h)/2,idx:i,age:c.length-i});
+    if(x.h<a.l)f.push({type:'bear',top:a.l,bottom:x.h,mid:(a.l+x.h)/2,idx:i,age:c.length-i});
   }
-  return fvgs.filter(f=>f.age<40).slice(-6);
+  return f.filter(x=>x.age<40).slice(-6);
 }
-
-function detectOB(candles){
-  const obs=[];
-  for(let i=2;i<candles.length-1;i++){
-    const c=candles[i],nx=candles[i+1];
-    if(c.c<c.o && nx.c>nx.o && (nx.c-nx.o)>(c.o-c.c)*1.3) obs.push({type:'bull',top:c.o,bottom:c.l,idx:i,age:candles.length-i});
-    if(c.c>c.o && nx.c<nx.o && (nx.o-nx.c)>(c.c-c.o)*1.3) obs.push({type:'bear',top:c.h,bottom:c.c,idx:i,age:candles.length-i});
+function detectOB(c){
+  const o=[];
+  for(let i=2;i<c.length-1;i++){
+    const x=c[i],n=c[i+1];
+    if(x.c<x.o&&n.c>n.o&&(n.c-n.o)>(x.o-x.c)*1.3)o.push({type:'bull',top:x.o,bottom:x.l,idx:i,age:c.length-i});
+    if(x.c>x.o&&n.c<n.o&&(n.o-n.c)>(x.c-x.o)*1.3)o.push({type:'bear',top:x.h,bottom:x.c,idx:i,age:c.length-i});
   }
-  return obs.filter(o=>o.age<60).slice(-4);
+  return o.filter(x=>x.age<60).slice(-4);
 }
-
-function detectLiq(candles,n=30){
-  const r=candles.slice(-n),sh=[],sl=[];
+function detectLiq(c,n=30){
+  const r=c.slice(-n),sh=[],sl=[];
   for(let i=2;i<r.length-2;i++){
-    if(r[i].h>r[i-1].h&&r[i].h>r[i-2].h&&r[i].h>r[i+1].h&&r[i].h>r[i+2].h) sh.push({price:r[i].h,idx:i});
-    if(r[i].l<r[i-1].l&&r[i].l<r[i-2].l&&r[i].l<r[i+1].l&&r[i].l<r[i+2].l) sl.push({price:r[i].l,idx:i});
+    if(r[i].h>r[i-1].h&&r[i].h>r[i-2].h&&r[i].h>r[i+1].h&&r[i].h>r[i+2].h)sh.push({price:r[i].h,idx:i});
+    if(r[i].l<r[i-1].l&&r[i].l<r[i-2].l&&r[i].l<r[i+1].l&&r[i].l<r[i+2].l)sl.push({price:r[i].l,idx:i});
   }
   return{highs:sh.slice(-3),lows:sl.slice(-3)};
 }
-
-function detectSweep(candles,liq){
-  const last=candles[candles.length-1],prev=candles[candles.length-2];
-  for(const h of liq.highs) if(last.h>h.price&&prev.h<=h.price) return{dir:'bear',price:h.price,detail:`BSL Sweep @ ${h.price.toFixed(3)}`};
-  for(const l of liq.lows)  if(last.l<l.price&&prev.l>=l.price) return{dir:'bull',price:l.price,detail:`SSL Sweep @ ${l.price.toFixed(3)}`};
+function detectSweep(c,liq){
+  const last=c[c.length-1],prev=c[c.length-2];
+  for(const h of liq.highs)if(last.h>h.price&&prev.h<=h.price)return{dir:'bear',price:h.price,detail:`BSL Sweep @ ${h.price.toFixed(3)}`};
+  for(const l of liq.lows)if(last.l<l.price&&prev.l>=l.price)return{dir:'bull',price:l.price,detail:`SSL Sweep @ ${l.price.toFixed(3)}`};
   return null;
 }
-
-function detectMS(candles){
-  const r=candles.slice(-20);
-  const hs=r.map(c=>c.h),ls=r.map(c=>c.l);
+function detectMS(c){
+  const r=c.slice(-20),hs=r.map(x=>x.h),ls=r.map(x=>x.l);
   const hh=hs[hs.length-1]>Math.max(...hs.slice(0,-5));
   const hl=ls[ls.length-1]>Math.min(...ls.slice(0,-5));
   const lh=hs[hs.length-1]<Math.max(...hs.slice(0,-5));
   const ll=ls[ls.length-1]<Math.min(...ls.slice(0,-5));
-  if(hh&&hl) return{bias:'bull',detail:'HH+HL Bullish'};
-  if(lh&&ll) return{bias:'bear',detail:'LH+LL Bearish'};
-  if(hh) return{bias:'bull',detail:'Higher High'};
-  if(ll) return{bias:'bear',detail:'Lower Low'};
+  if(hh&&hl)return{bias:'bull',detail:'HH+HL Bullish'};
+  if(lh&&ll)return{bias:'bear',detail:'LH+LL Bearish'};
+  if(hh)return{bias:'bull',detail:'Higher High'};
+  if(ll)return{bias:'bear',detail:'Lower Low'};
   return{bias:'neutral',detail:'Ranging'};
 }
-
 function isKZ(){
   const h=new Date().getUTCHours(),m=new Date().getUTCMinutes();
-  const lon=(h===7)||(h===8&&m<30);
-  const ny=(h===12)||(h===13&&m<30);
-  const tok=(h===0)||(h===1&&m<30);
+  const lon=(h===7)||(h===8&&m<30),ny=(h===12)||(h===13&&m<30),tok=(h===0)||(h===1&&m<30);
   return{active:lon||ny||tok,name:lon?'London KZ':ny?'NY KZ':tok?'Tokyo KZ':null};
 }
 
-// ════════════════════════════════════════
-//  MASTER SIGNAL
-// ════════════════════════════════════════
-function computeSignal(candles, pair){
-  if(candles.length<30) return{dir:'wait',conf:0,detail:'Nicht genug Daten'};
+function computeSignal(candles,pair){
+  if(candles.length<30)return{dir:'wait',conf:0,detail:'Nicht genug Daten'};
   const closes=candles.map(c=>c.c);
-  const ms   =detectMS(candles);
-  const fvgs =detectFVG(candles);
-  const obs  =detectOB(candles);
-  const liq  =detectLiq(candles);
-  const sweep=detectSweep(candles,liq);
-  const kz   =isKZ();
-  const ef   =ema(closes,8), es=ema(closes,21);
-  const rv   =rsi(closes,14);
-  const last =candles[candles.length-1];
-  const n    =closes.length-1;
-  const pip  =pair.pip===2?0.01:0.0001;
-
-  const curRSI=rv[n]||50;
-  const emaAbove=ef[n]>es[n];
-  const crossUp=ef[n]>es[n]&&ef[n-1]<=es[n-1];
-  const crossDown=ef[n]<es[n]&&ef[n-1]>=es[n-1];
-
+  const ms=detectMS(candles),fvgs=detectFVG(candles),obs=detectOB(candles);
+  const liq=detectLiq(candles),sweep=detectSweep(candles,liq),kz=isKZ();
+  const ef=ema(closes,8),es=ema(closes,21),rv=rsi(closes,14);
+  const last=candles[candles.length-1],n=closes.length-1;
+  const curRSI=rv[n]||50,emaAbove=ef[n]>es[n];
+  const crossUp=ef[n]>es[n]&&ef[n-1]<=es[n-1],crossDown=ef[n]<es[n]&&ef[n-1]>=es[n-1];
+  const pip=pair.pip===2?0.01:0.0001;
   const nearFVG=fvgs.find(f=>Math.abs(last.c-f.mid)/pip<25);
-  const nearOB =obs.find(o=>Math.abs(last.c-(o.top+o.bottom)/2)/pip<25);
-
+  const nearOB=obs.find(o=>Math.abs(last.c-(o.top+o.bottom)/2)/pip<25);
   let bs=0,ss=0,reasons=[];
-
-  if(ms.bias==='bull'){bs+=25;reasons.push('MS↑');}
-  else if(ms.bias==='bear'){ss+=25;reasons.push('MS↓');}
-
-  if(sweep){
-    if(sweep.dir==='bull'){bs+=35;reasons.push('⚡SSL Sweep');}
-    else{ss+=35;reasons.push('⚡BSL Sweep');}
-  }
-
-  if(nearFVG){
-    if(nearFVG.type==='bull'&&last.c>nearFVG.bottom){bs+=20;reasons.push('FVG↑');}
-    else if(nearFVG.type==='bear'&&last.c<nearFVG.top){ss+=20;reasons.push('FVG↓');}
-  }
-
-  if(nearOB){
-    if(nearOB.type==='bull'&&last.c>nearOB.bottom){bs+=15;reasons.push('OB↑');}
-    else if(nearOB.type==='bear'&&last.c<nearOB.top){ss+=15;reasons.push('OB↓');}
-  }
-
-  if(emaAbove){bs+=10;}else{ss+=10;}
-  if(crossUp){bs+=10;reasons.push('EMA↑');}
-  if(crossDown){ss+=10;reasons.push('EMA↓');}
-  if(curRSI>55){bs+=5;}else if(curRSI<45){ss+=5;}
-  if(kz.active){bs=Math.round(bs*1.2);ss=Math.round(ss*1.2);reasons.push(kz.name);}
-
-  // Store
-  st.emaF[pair.sym]=ef; st.emaS[pair.sym]=es;
-  st.fvgs[pair.sym]=fvgs; st.obs[pair.sym]=obs;
-  st.liqs[pair.sym]=liq; st.sweeps[pair.sym]=sweep;
-
-  // Update cards
-  setIC('iMS', ms.bias==='bull'?'BULLISH':ms.bias==='bear'?'BEARISH':'RANGING', ms.bias==='bull'?'bull':ms.bias==='bear'?'bear':'neutral', ms.detail);
+  if(ms.bias==='bull'){bs+=25;reasons.push('MS↑');}else if(ms.bias==='bear'){ss+=25;reasons.push('MS↓');}
+  if(sweep){if(sweep.dir==='bull'){bs+=35;reasons.push('⚡SSL');}else{ss+=35;reasons.push('⚡BSL');}}
+  if(nearFVG){if(nearFVG.type==='bull'&&last.c>nearFVG.bottom){bs+=20;reasons.push('FVG↑');}else if(nearFVG.type==='bear'&&last.c<nearFVG.top){ss+=20;reasons.push('FVG↓');}}
+  if(nearOB){if(nearOB.type==='bull'&&last.c>nearOB.bottom){bs+=15;reasons.push('OB↑');}else if(nearOB.type==='bear'&&last.c<nearOB.top){ss+=15;reasons.push('OB↓');}}
+  if(emaAbove)bs+=10;else ss+=10;
+  if(crossUp){bs+=10;reasons.push('EMA↑');}if(crossDown){ss+=10;reasons.push('EMA↓');}
+  if(curRSI>55)bs+=5;else if(curRSI<45)ss+=5;
+  if(kz.active){bs=Math.round(bs*1.2);ss=Math.round(ss*1.2);if(kz.name)reasons.push(kz.name);}
+  setIC('iMS',ms.bias==='bull'?'BULLISH':ms.bias==='bear'?'BEARISH':'RANGING',ms.bias==='bull'?'bull':ms.bias==='bear'?'bear':'neutral',ms.detail);
   const rf=fvgs[fvgs.length-1];
-  setIC('iFVG', rf?`${rf.type.toUpperCase()} FVG`:'NO FVG', rf?(rf.type==='bull'?'bull':'bear'):'neutral', rf?`${rf.mid.toFixed(pair.dec)}`:'Suche FVGs…');
+  setIC('iFVG',rf?`${rf.type.toUpperCase()} FVG`:'NO FVG',rf?(rf.type==='bull'?'bull':'bear'):'neutral',rf?`${rf.mid.toFixed(pair.dec)}`:'Kein FVG');
   const ro=obs[obs.length-1];
-  setIC('iOB', ro?`${ro.type.toUpperCase()} OB`:'NO OB', ro?(ro.type==='bull'?'bull':'bear'):'neutral', ro?`${ro.bottom.toFixed(pair.dec)}–${ro.top.toFixed(pair.dec)}`:'Suche OBs…');
-  setIC('iLIQ', sweep?`SWEEP ${sweep.dir.toUpperCase()}`:`${liq.highs.length}H/${liq.lows.length}L`, sweep?(sweep.dir==='bull'?'bull':'bear'):'neutral', sweep?sweep.detail:'Liquidity Levels');
-
-  // Levels sidebar
+  setIC('iOB',ro?`${ro.type.toUpperCase()} OB`:'NO OB',ro?(ro.type==='bull'?'bull':'bear'):'neutral',ro?`${ro.bottom.toFixed(pair.dec)}–${ro.top.toFixed(pair.dec)}`:'Kein OB');
+  setIC('iLIQ',sweep?`SWEEP ${sweep.dir.toUpperCase()}`:`${liq.highs.length}H/${liq.lows.length}L`,sweep?(sweep.dir==='bull'?'bull':'bear'):'neutral',sweep?sweep.detail:'Liquidity Levels');
+  st.emaF[pair.sym]=ef;st.emaS[pair.sym]=es;st.fvgs[pair.sym]=fvgs;st.obs[pair.sym]=obs;st.liqs[pair.sym]=liq;st.sweeps[pair.sym]=sweep;
   updateLevels(fvgs,obs,liq,last.c,pip,pair.dec);
-
-  const bc=Math.min(bs,100), sc=Math.min(ss,100);
+  const bc=Math.min(bs,100),sc=Math.min(ss,100);
   const detail=reasons.slice(0,4).join(' · ')||'Kein Setup';
-
-  if(sweep&&bc>sc&&bc>=AUTO_CONF_THRESHOLD) return{dir:'buy',conf:bc,detail:`⚡SSL SWEEP · ${detail}`,sweep:true};
-  if(sweep&&sc>bc&&sc>=AUTO_CONF_THRESHOLD) return{dir:'sell',conf:sc,detail:`⚡BSL SWEEP · ${detail}`,sweep:true};
-  if(bc>=AUTO_CONF_THRESHOLD&&bc>sc) return{dir:'buy',conf:bc,detail};
-  if(sc>=AUTO_CONF_THRESHOLD&&sc>bc) return{dir:'sell',conf:sc,detail};
-  return{dir:'wait',conf:Math.max(bc,sc),detail:`No setup — B${bc}% S${sc}%`};
+  if(sweep&&bc>sc&&bc>=70)return{dir:'buy',conf:bc,detail:`⚡SSL SWEEP · ${detail}`,sweep:true};
+  if(sweep&&sc>bc&&sc>=70)return{dir:'sell',conf:sc,detail:`⚡BSL SWEEP · ${detail}`,sweep:true};
+  if(bc>=70&&bc>sc)return{dir:'buy',conf:bc,detail};
+  if(sc>=70&&sc>bc)return{dir:'sell',conf:sc,detail};
+  return{dir:'wait',conf:Math.max(bc,sc),detail:`B${bc}% S${sc}%`};
 }
 
 function setIC(id,val,cls,sub){
@@ -656,13 +569,14 @@ function updateLevels(fvgs,obs,liq,price,pip,dec){
   document.getElementById('lvCount').textContent=lvs.length;
   document.getElementById('lvList').innerHTML=lvs.slice(0,8).map(lv=>
     `<div class="lv-row"><span class="lv-type ${lv.cls}">${lv.label}</span><span class="lv-price">${lv.price.toFixed(dec)}</span><span class="lv-dist">${Math.round(lv.dist)}p</span></div>`
-  ).join('')||'<div style="padding:10px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:9px">Keine ICT Levels</div>';
+  ).join('')||'<div style="padding:10px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:9px">Keine Levels</div>';
 }
 
-// ════════════════════════════════════════
-//  SIGNAL BANNER
-// ════════════════════════════════════════
-function updateSignal(sig){
+// ═══════════════════════════════════════
+//  SIGNAL DISPLAY
+// ═══════════════════════════════════════
+function updateSignal(sig, pair){
+  st.currentSig=sig;
   const box=document.getElementById('sigBox'),main=document.getElementById('sigMain');
   const cls=sig.sweep?'sweep':sig.dir;
   box.className=`sig-box sb-${cls}`;main.className=`sm sm-${cls}`;
@@ -671,148 +585,85 @@ function updateSignal(sig){
   document.getElementById('confNum').textContent=sig.conf+'%';
   const f=document.getElementById('confFill');
   f.style.width=sig.conf+'%';f.className=`cf ${sig.conf>=70?'cf-h':sig.conf>=50?'cf-m':'cf-l'}`;
-  if(sig.dir!=='wait') setDir(sig.dir.toUpperCase());
-}
 
-// ════════════════════════════════════════
-//  AUTO TRADING
-// ════════════════════════════════════════
-function toggleAuto(){
-  if(st.dailyStopped){log('Daily Loss Limit erreicht — Auto gesperrt','e');return;}
-  st.autoMode=!st.autoMode;
-  const tog=document.getElementById('autoToggle');
-  const btn=document.getElementById('autoBtn');
-  const badge=document.getElementById('modeBadge');
-  if(st.autoMode){
-    tog.className='auto-toggle on';tog.innerHTML='<div class="toggle-dot"></div>AUTO ON';
-    btn.className='auto-btn on';btn.textContent='⚡ AUTO TRADING ON — KLICK ZUM STOPPEN';
-    badge.className='logo-badge lb-auto';badge.textContent='AUTO';
-    log('🤖 Auto-Trading aktiviert — Conf ≥'+AUTO_CONF_THRESHOLD+'% | Max Spread '+MAX_SPREAD_PIPS+'p | Stop -€'+Math.abs(MAX_DAILY_LOSS),'auto');
-    sendTelegram('🟢 AUTO-TRADING AKTIVIERT\nConf ≥'+AUTO_CONF_THRESHOLD+'%\nMax Spread: '+MAX_SPREAD_PIPS+'p\nDaily Stop: -€'+Math.abs(MAX_DAILY_LOSS));
-    autoLog('🤖 Auto aktiv — warte auf ICT Signal ≥'+AUTO_CONF_THRESHOLD+'%…');
-  }else{
-    tog.className='auto-toggle off';tog.innerHTML='<div class="toggle-dot"></div>AUTO OFF';
-    btn.className='auto-btn off';btn.textContent='⚡ AUTO TRADING OFF';
-    badge.className='logo-badge lb-paper';badge.textContent=st.igConnected?'LIVE':'PAPER';
-    log('Auto-Trading deaktiviert','w');
-    autoLog('⏸ Auto pausiert');
-  }
-}
+  // Right panel signal detail
+  const sdbMain=document.getElementById('sdbMain');
+  sdbMain.textContent=sig.sweep?(sig.dir==='buy'?'⚡ SWEEP BUY':'⚡ SWEEP SELL'):sig.dir==='buy'?'▲ BUY':sig.dir==='sell'?'▼ SELL':'— WAIT';
+  sdbMain.className=`sdb-main ${cls}`;
+  document.getElementById('sdbSub').textContent=sig.detail;
 
-function checkAutoTrade(sig, pair){
-  if(!st.autoMode||st.dailyStopped) return;
-  if(sig.dir==='wait'||sig.conf<AUTO_CONF_THRESHOLD) return;
-  // Don't open if already have position OR pending order on this pair
-  if(st.positions.some(p=>p.sym===pair.sym)){
-    return; // silent — already have position
-  }
-  if(st.pendingOrders?.has(pair.sym)){
-    return; // order being placed right now
-  }
-
-  // No cooldown — trade whenever setup is valid
-
-  // Check spread
+  // Entry details
   const d=st.cache[pair.sym];
-  if(d?.spread && d.spread > MAX_SPREAD_PIPS){
-    autoLog(`⚠️ ${pair.sym} Spread ${d.spread}p > ${MAX_SPREAD_PIPS}p — skip`);
-    log(`Auto skip ${pair.sym}: Spread ${d.spread}p zu hoch`,'w');
-    return;
+  const price=d?.lastPrice||0;
+  const pip=pair.pip===2?0.01:0.0001;
+  const sp=pair.spread*pip;
+  const entry=sig.dir==='buy'?+(price+sp/2).toFixed(pair.dec):+(price-sp/2).toFixed(pair.dec);
+  const sl=sig.dir==='buy'?+(entry-SL_PIPS*pip).toFixed(pair.dec):+(entry+SL_PIPS*pip).toFixed(pair.dec);
+  const tp=sig.dir==='buy'?+(entry+TP_PIPS*pip).toFixed(pair.dec):+(entry-TP_PIPS*pip).toFixed(pair.dec);
+
+  document.getElementById('ebPair').textContent=pair.sym;
+  document.getElementById('ebEntry').textContent=price?entry:'—';
+  document.getElementById('ebSL').textContent=price?sl:'—';
+  document.getElementById('ebTP').textContent=price?tp:'—';
+  document.getElementById('ebSpread').textContent=pair.spread+'p';
+  document.getElementById('ebRR').textContent=`1:${(TP_PIPS/SL_PIPS).toFixed(1)}`;
+  document.getElementById('ebConf').textContent=sig.conf+'%';
+  document.getElementById('ebSetup').textContent=sig.detail;
+
+  // Send button
+  const btn=document.getElementById('tgSendBtn');
+  if(sig.dir!=='wait'&&sig.conf>=70){
+    btn.className=`tg-send-btn ${sig.dir}`;
+    btn.textContent=`📱 ${sig.dir==='buy'?'BUY':'SELL'} Signal senden`;
+    btn.disabled=false;
+  }else{
+    btn.className='tg-send-btn wait';
+    btn.textContent='📱 Kein Signal (< 70%)';
+    btn.disabled=true;
   }
-
-  // Check daily loss limit
-  if(st.dailyPnl <= MAX_DAILY_LOSS){
-    stopAuto('Daily Loss Limit -€'+Math.abs(MAX_DAILY_LOSS)+' erreicht');
-    return;
-  }
-
-
-  log(`🤖 AUTO: ${sig.dir.toUpperCase()} ${pair.sym} | Conf:${sig.conf}% | ${sig.detail}`,'auto');
-  autoLog(`🤖 AUTO ORDER: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}%`);
-  placeOrder(true, pair, sig.dir);
 }
 
-function stopAuto(reason){
-  st.autoMode=false; st.dailyStopped=true;
-  document.getElementById('autoToggle').className='auto-toggle stopped';
-  document.getElementById('autoToggle').innerHTML='<div class="toggle-dot"></div>STOPPED';
-  document.getElementById('autoBtn').className='auto-btn stopped';
-  document.getElementById('autoBtn').textContent='⛔ AUTO GESTOPPT: '+reason;
-  document.getElementById('modeBadge').className='logo-badge lb-stopped';
-  document.getElementById('modeBadge').textContent='STOPPED';
-  log(`⛔ Auto gestoppt: ${reason}`,'e');
-  sendTelegram(`⛔ AUTO-TRADING GESTOPPT\nGrund: ${reason}\nTag P&L: ${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`);
-  autoLog(`⛔ GESTOPPT: ${reason}`);
-}
-
-function updateDailyPnl(){
-  const el=document.getElementById('dailyPnl');
-  el.textContent=`Day: ${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`;
-  el.className=`daily-pnl ${st.dailyPnl>=0?'dpnl-pos':'dpnl-neg'}`;
-  if(st.dailyPnl<=MAX_DAILY_LOSS && !st.dailyStopped) stopAuto(`-€${Math.abs(MAX_DAILY_LOSS)} Limit`);
-}
-
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  CHART
-// ════════════════════════════════════════
-function drawChart(candles, pair){
+// ═══════════════════════════════════════
+function drawChart(candles,pair){
   const wrap=document.getElementById('chartWrap');
   const cv=document.getElementById('mainChart');
-  const W=wrap.clientWidth, H=wrap.clientHeight-6;
+  const W=wrap.clientWidth,H=wrap.clientHeight-6;
   if(W<10||H<10)return;
   const dpr=window.devicePixelRatio||1;
   cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
-
-  const n=Math.min(candles.length,80);
-  const slice=candles.slice(-n);
+  const n=Math.min(candles.length,80),slice=candles.slice(-n);
   const ef=st.emaF[pair.sym]?.slice(-n)||[];
   const es=st.emaS[pair.sym]?.slice(-n)||[];
   const fvgs=st.fvgs[pair.sym]||[];
   const obs=st.obs[pair.sym]||[];
   const liq=st.liqs[pair.sym]||{highs:[],lows:[]};
-
   const allP=slice.flatMap(c=>[c.h,c.l]);
   const mn=Math.min(...allP),mx=Math.max(...allP),rng=mx-mn||0.001;
-  const pd={l:2,r:4,t:8,b:2};
-  const cw=W-pd.l-pd.r,ch=H-pd.t-pd.b;
+  const pd={l:2,r:4,t:8,b:2},cw=W-pd.l-pd.r,ch=H-pd.t-pd.b;
   const bw=cw/n*0.65;
-  const x=i=>pd.l+(i+0.5)*(cw/n);
-  const y=v=>pd.t+(1-(v-mn)/rng)*ch;
-
+  const x=i=>pd.l+(i+0.5)*(cw/n),y=v=>pd.t+(1-(v-mn)/rng)*ch;
   ctx.clearRect(0,0,W,H);
-
-  // Grid
   ctx.strokeStyle='#0a0f1a';ctx.lineWidth=.4;
   for(let i=0;i<5;i++){const yy=pd.t+(i/4)*ch;ctx.beginPath();ctx.moveTo(pd.l,yy);ctx.lineTo(W-pd.r,yy);ctx.stroke();}
-
-  // FVG zones
   fvgs.forEach(f=>{
     const fi=f.idx-(candles.length-n);if(fi<0)return;
     ctx.fillStyle=f.type==='bull'?'rgba(14,203,129,.07)':'rgba(246,70,93,.07)';
     const y1=y(f.top),y2=y(f.bottom);
     ctx.fillRect(x(fi),Math.min(y1,y2),W-pd.r-x(fi),Math.abs(y1-y2));
-    // Label
-    ctx.fillStyle=f.type==='bull'?'rgba(14,203,129,.6)':'rgba(246,70,93,.6)';
-    ctx.font='7px Space Mono,monospace';
-    ctx.fillText('FVG',x(fi)+2,Math.min(y1,y2)-1);
   });
-
-  // OB zones
   obs.forEach(o=>{
     const oi=o.idx-(candles.length-n);if(oi<0)return;
     ctx.fillStyle=o.type==='bull'?'rgba(61,139,255,.1)':'rgba(139,92,246,.1)';
     const y1=y(o.top),y2=y(o.bottom);
     ctx.fillRect(x(oi),Math.min(y1,y2),W-pd.r-x(oi),Math.abs(y1-y2));
   });
-
-  // Liquidity dashed lines
   ctx.lineWidth=.7;ctx.setLineDash([4,3]);
   liq.highs.forEach(h=>{ctx.strokeStyle='rgba(246,70,93,.5)';ctx.beginPath();ctx.moveTo(pd.l,y(h.price));ctx.lineTo(W-pd.r,y(h.price));ctx.stroke();});
   liq.lows.forEach(l=>{ctx.strokeStyle='rgba(14,203,129,.5)';ctx.beginPath();ctx.moveTo(pd.l,y(l.price));ctx.lineTo(W-pd.r,y(l.price));ctx.stroke();});
   ctx.setLineDash([]);
-
-  // Candles
   slice.forEach((c,i)=>{
     const bull=c.c>=c.o,col=bull?'#0ecb81':'#f6465d';
     ctx.strokeStyle=col;ctx.lineWidth=.7;
@@ -821,112 +672,42 @@ function drawChart(candles, pair){
     ctx.fillStyle=bull?'rgba(14,203,129,.85)':'rgba(246,70,93,.85)';
     ctx.fillRect(x(i)-bw/2,by,bw,bh);
   });
-
-  // EMAs
   if(ef.length){ctx.beginPath();ctx.strokeStyle='rgba(14,203,129,.75)';ctx.lineWidth=1;ef.forEach((v,i)=>{i===0?ctx.moveTo(x(i),y(v)):ctx.lineTo(x(i),y(v));});ctx.stroke();}
   if(es.length){ctx.beginPath();ctx.strokeStyle='rgba(246,70,93,.75)';ctx.lineWidth=1;es.forEach((v,i)=>{i===0?ctx.moveTo(x(i),y(v)):ctx.lineTo(x(i),y(v));});ctx.stroke();}
-
-  // Last price
   const lp=slice[slice.length-1].c;
   ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=.5;
-  ctx.beginPath();ctx.moveTo(pd.l,y(lp));ctx.lineTo(W-pd.r,y(lp));ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Sweep marker
-  const sweep=st.sweeps[pair.sym];
-  if(sweep){
-    ctx.font='bold 11px Space Mono';
-    ctx.fillStyle=sweep.dir==='bull'?'var(--green)':'var(--red)';
-    ctx.fillText('⚡',x(n-1)-4,y(sweep.price)-4);
-  }
-
-  // Open positions on chart
-  st.positions.filter(p=>p.sym===pair.sym).forEach(pos=>{
-    const col=pos.dir==='BUY'?'rgba(14,203,129,.8)':'rgba(246,70,93,.8)';
-    ctx.strokeStyle=col;ctx.lineWidth=1;ctx.setLineDash([2,2]);
-    ctx.beginPath();ctx.moveTo(pd.l,y(pos.entry));ctx.lineTo(W-pd.r,y(pos.entry));ctx.stroke();
-    ctx.beginPath();ctx.strokeStyle='rgba(246,70,93,.5)';ctx.moveTo(pd.l,y(pos.slPrice));ctx.lineTo(W-pd.r,y(pos.slPrice));ctx.stroke();
-    ctx.beginPath();ctx.strokeStyle='rgba(14,203,129,.5)';ctx.moveTo(pd.l,y(pos.tpPrice));ctx.lineTo(W-pd.r,y(pos.tpPrice));ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font='8px Space Mono';ctx.fillStyle=col;
-    ctx.fillText(pos.dir+' '+pos.entry.toFixed(pair.dec),pd.l+2,y(pos.entry)-3);
-  });
+  ctx.beginPath();ctx.moveTo(pd.l,y(lp));ctx.lineTo(W-pd.r,y(lp));ctx.stroke();ctx.setLineDash([]);
 }
 
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  PAIR LIST
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 function renderPairs(){
   document.getElementById('pairList').innerHTML=PAIRS.map(p=>{
     const d=st.cache[p.sym];
     const price=d?.lastPrice;const prev=d?.prevClose||price;
     const chg=d&&prev?(price-prev)/prev*100:0;
     const sig=st.signals[p.sym]||{dir:'wait'};
-    const hasPos=st.positions.some(pos=>pos.sym===p.sym);
-    const tagCls=sig.sweep?'it-sweep':sig.dir==='buy'?'it-buy':sig.dir==='sell'?'it-sell':'it-wait';
+    const tagCls=sig.sweep?'st-sweep':sig.dir==='buy'?'st-buy':sig.dir==='sell'?'st-sell':'st-wait';
     const tagTxt=sig.sweep?'⚡SWEEP':sig.dir==='buy'?'BUY':sig.dir==='sell'?'SELL':'WAIT';
     return`<div class="pair-row ${p.sym===st.pair.sym?'active':''}" onclick="selectPair('${p.sym}')">
       <div class="pr-top">
-        <span class="pr-sym">${p.sym}${hasPos?'<span style="color:var(--accent);margin-left:3px;font-size:8px">●</span>':''}</span>
+        <span class="pr-sym">${p.sym}</span>
         <span class="pr-price" style="color:${chg>=0?'var(--green)':'var(--red)'}">${price?price.toFixed(p.dec):'—'}</span>
       </div>
       <div class="pr-bot">
-        <span class="pr-sp">Sp:${d?.spread||'—'}p</span>
-        <span class="ict-tag ${tagCls}">${tagTxt}</span>
+        <span class="pr-sp">Sp:${p.spread}p</span>
+        <span class="sig-tag ${tagCls}">${tagTxt}</span>
       </div>
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════
-//  SPREAD + RR DISPLAY
-// ════════════════════════════════════════
-function updateSpreadDisplay(pair){
-  const d=st.cache[pair.sym];
-  if(!d) return;
-  document.getElementById('bidEl').textContent=d.bid?.toFixed(pair.dec)||'—';
-  document.getElementById('askEl').textContent=d.ask?.toFixed(pair.dec)||'—';
-  document.getElementById('spEl').textContent=(d.spread||'—')+'p';
-  document.getElementById('livePrice').textContent=d.lastPrice?.toFixed(pair.dec)||'—';
-  document.getElementById('livePrice').className=`live-price ${(d.lastPrice||0)>=(d.prevClose||0)?'lp-up':'lp-dn'}`;
-  const chg=d.prevClose?((d.lastPrice-d.prevClose)/d.prevClose*100):0;
-  document.getElementById('priceChg').textContent=`${chg>=0?'+':''}${chg.toFixed(3)}%`;
-  document.getElementById('priceChg').style.color=chg>=0?'var(--green)':'var(--red)';
-  // Lot info
-  const sp=d.spread||2;
-  document.getElementById('lotInfo').textContent=`Mini Pair · 0.01L · Spread: ${sp}p = €${(sp*pair.pipVal*LOTS*100).toFixed(3)}`;
-  calcRR();
-}
-
-function calcRR(){
-  const pair=st.pair;
-  const sl=parseFloat(document.getElementById('slIn').value)||15;
-  const tp=parseFloat(document.getElementById('tpIn').value)||30;
-  const sp=st.cache[pair.sym]?.spread||2;
-  // Spread cost = spread pips * pip value * lots
-  const spCost=(sp*pair.pipVal*LOTS*100);
-  const slCost=(sl*pair.pipVal*LOTS*100);
-  const tpVal =(tp*pair.pipVal*LOTS*100);
-  // Effective TP after spread
-  const effTP=tpVal-spCost;
-  const effSL=slCost+spCost;
-  document.getElementById('rrSL').textContent=`-€${effSL.toFixed(2)}`;
-  document.getElementById('rrTP').textContent=`+€${effTP.toFixed(2)}`;
-  document.getElementById('rrRR').textContent=`1:${(effTP/effSL).toFixed(1)}`;
-  document.getElementById('rrSP').textContent=`€${spCost.toFixed(3)}`;
-}
-
-// ════════════════════════════════════════
-//  SELECT PAIR / TF / DIR
-// ════════════════════════════════════════
 function selectPair(sym){
   const pair=PAIRS.find(p=>p.sym===sym);if(!pair)return;
   st.pair=pair;
-  document.getElementById('orderPair').value=sym;
   document.getElementById('pairTitle').textContent=sym;
-  updateExecBtn();
-  renderPairs();
-  scan();
+  renderPairs();scan();
 }
 
 function setTF(tf){
@@ -937,532 +718,87 @@ function setTF(tf){
   scan();
 }
 
-function setDir(dir){
-  st.dir=dir;
-  document.getElementById('btnBuy').className=`dir-btn buy${dir==='BUY'?' on':''}`;
-  document.getElementById('btnSell').className=`dir-btn sell${dir==='SELL'?' on':''}`;
-  updateExecBtn();
-}
-
-function updateExecBtn(){
-  const eb=document.getElementById('execBtn');
-  eb.className=`exec-btn ${st.dir.toLowerCase()}`;
-  eb.textContent=`${st.dir==='BUY'?'▲ BUY':'▼ SELL'} ${st.pair.sym} (0.01L)`;
-}
-
-// ════════════════════════════════════════
-//  PLACE ORDER
-// ════════════════════════════════════════
-async function placeOrder(auto=false, overridePair=null, overrideDir=null){
-  const pair=overridePair||st.pair;
-  const dir=overrideDir||st.dir;
-  const sl=parseFloat(document.getElementById('slIn').value)||15;
-  const tp=parseFloat(document.getElementById('tpIn').value)||30;
-  const d=st.cache[pair.sym];
-  const pip=pair.pip===2?0.01:0.0001;
-  const spread=d?.spread||2;
-
-  // Entry price including spread
-  const rawEntry=dir==='BUY'?(d?.ask||d?.lastPrice):(d?.bid||d?.lastPrice);
-  if(!rawEntry){log('Kein Preis verfügbar','e');return;}
-
-  // SL/TP adjusted for spread
-  const spreadAdj=spread*pip;
-  const entry=dir==='BUY'?+(rawEntry).toFixed(pair.dec):+(rawEntry).toFixed(pair.dec);
-  const slPrice=dir==='BUY'?+(entry-sl*pip).toFixed(pair.dec):+(entry+sl*pip).toFixed(pair.dec);
-  const tpPrice=dir==='BUY'?+(entry+tp*pip-spreadAdj).toFixed(pair.dec):+(entry-tp*pip+spreadAdj).toFixed(pair.dec);
-
-  const pos={
-    id:Date.now(),sym:pair.sym,dir,entry,current:entry,
-    slPrice,tpPrice,spread,pnl:0,pips:0,pair,auto,
-    openTime:new Date(),lots:LOTS,
-  };
-
-  // Mark as pending to prevent duplicate orders
-  if(!st.pendingOrders) st.pendingOrders = new Set();
-  st.pendingOrders.add(pair.sym);
-  
-  if(st.mode==='paper'||st.mode==='td'){
-    st.positions.push(pos);
-    st.tradesPlaced++;
-    st.pendingOrders.delete(pair.sym);
-    renderPositions();
-    log(`${auto?'🤖 AUTO':'MANUAL'} ${dir} ${pair.sym} 0.01L @ ${entry.toFixed(pair.dec)} | SL:${slPrice} TP:${tpPrice} | Spread:${spread}p`,'w');
-    if(auto) sendTelegram(
-      `🤖 AUTO TRADE GEÖFFNET\n` +
-      `${dir==='BUY'?'▲':'▼'} ${dir} ${pair.sym}\n` +
-      `Entry: ${entry.toFixed(pair.dec)}\n` +
-      `SL: ${slPrice} (${parseFloat(document.getElementById('slIn').value)}p)\n` +
-      `TP: ${tpPrice} (${parseFloat(document.getElementById('tpIn').value)}p)\n` +
-      `Spread: ${spread}p\n` +
-      `Setup: ${st.signals[pair.sym]?.detail||'ICT'}\n` +
-      `Conf: ${st.signals[pair.sym]?.conf||0}%`
-    );
-    startTracker(pos);
-    return;
-  }
-
-  // Live IG — direct from browser (iPad IP, no proxy)
-  try{
-    const igHeaders={
-      'Content-Type':'application/json',
-      'X-IG-API-KEY':st.igToken.apiKey,
-      'CST':st.igToken.cst,
-      'X-SECURITY-TOKEN':st.igToken.secToken,
-      'Version':'2',
-    };
-    const order={
-      epic:IG_EPICS[pair.sym], expiry:'-',
-      direction:dir, size:LOTS,
-      orderType:'MARKET', timeInForce:'FILL_OR_KILL',
-      guaranteedStop:false, currencyCode:'EUR',
-      stopDistance:sl, limitDistance:tp, trailingStop:false,
-    };
-    const r=await fetch(`${st.igToken.base}/positions/otc`,{
-      method:'POST', headers:igHeaders,
-      body:JSON.stringify(order)
-    });
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.errorCode||'Order rejected');
-    log(`IG ${data.dealStatus} — ${data.dealReference}`,'s');
-    setTimeout(async()=>{
-      try{
-        const cr=await fetch(`${st.igToken.base}/confirms/${data.dealReference}`,{headers:igHeaders});
-        const cd=await cr.json();
-        pos.entry=cd.level||entry;pos.current=pos.entry;
-        pos.igDealId=cd.dealId;pos.id=cd.dealId||pos.id;
-        st.positions.push(pos);st.tradesPlaced++;
-        st.pendingOrders?.delete(pair.sym);
-        renderPositions();startTracker(pos);fetchBalance();
-        log(`✅ FILLED ${dir} ${pair.sym} @ ${cd.level}`,'s');
-      }catch(e){log(`Confirm: ${e.message}`,'e');}
-    },1500);
-  }catch(e){
-    st.pendingOrders?.delete(pair.sym);
-    log(`Order: ${e.message}`,'e');
-  }
-}
-
-// ════════════════════════════════════════
-//  POSITION TRACKER
-// ════════════════════════════════════════
-function startTracker(pos){
-  pos._iv=setInterval(()=>{
-    const d=st.cache[pos.sym];
-    // Get live P&L from IG via proxy
-    if(st.igConnected&&pos.igDealId){
-      try{
-        const pr=await fetch(`${PROXY}/api/positions?env=${st.env}`);
-        const pd=await pr.json();
-        const livePos=(pd.positions||[]).find(p=>p.position?.dealId===pos.igDealId);
-        if(livePos){
-          pos.pnl=+(livePos.position.upl||0).toFixed(2);
-          pos.current=livePos.market?.offer||pos.current;
-          const pip=pos.pair.pip===2?0.01:0.0001;
-          pos.pips=Math.round((pos.dir==='BUY'?pos.current-pos.entry:pos.entry-pos.current)/pip*10)/10;
-          renderPositions();return;
-        }
-      }catch{}
-    }
-    if(d?.lastPrice){
-      pos.current=pos.dir==='BUY'?(d.bid||d.lastPrice):(d.ask||d.lastPrice);
-    }else{
-      const drift=(Math.random()-.499)*0.0003;
-      pos.current=+(pos.current+drift).toFixed(pos.pair.dec);
-    }
-    const pip=pos.pair.pip===2?0.01:0.0001;
-    pos.pips=Math.round((pos.dir==='BUY'?pos.current-pos.entry:pos.entry-pos.current)/pip*10)/10;
-    // Subtract spread from PnL
-    pos.pnl=+((pos.pips-pos.spread/2)*pos.pair.pipVal*LOTS*100).toFixed(2);
-
-    const hitSL=pos.dir==='BUY'?pos.current<=pos.slPrice:pos.current>=pos.slPrice;
-    const hitTP=pos.dir==='BUY'?pos.current>=pos.tpPrice:pos.current<=pos.tpPrice;
-
-    if(hitSL||hitTP){
-      const won=hitTP;
-      const pnl=won?Math.abs(pos.pnl):-Math.abs(pos.pnl);
-      st.dailyPnl=+(st.dailyPnl+pnl).toFixed(2);
-      updateDailyPnl();
-      log(`${won?'✅TP':'❌SL'}: ${pos.sym} ${pos.dir} ${pos.pips>0?'+':''}${pos.pips}p = €${pnl>0?'+':''}${pnl.toFixed(2)} | Day:${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`,won?'s':'e');
-      if(pos.auto) autoLog(`${won?'✅':'❌'} Auto ${pos.sym}: ${pos.pips>0?'+':''}${pos.pips}p | Day €${st.dailyPnl.toFixed(2)}`);
-      sendTelegram(
-        `${won?'✅ TAKE PROFIT':'❌ STOP LOSS'} GETROFFEN\n` +
-        `${pos.dir==='BUY'?'▲':'▼'} ${pos.dir} ${pos.sym}\n` +
-        `Entry: ${pos.entry.toFixed(pos.pair.dec)}\n` +
-        `Exit: ${pos.current.toFixed(pos.pair.dec)}\n` +
-        `Pips: ${pos.pips>0?'+':''}${pos.pips}p\n` +
-        `P&L: ${pnl>0?'+':''}€${pnl.toFixed(2)}\n` +
-        `Tag gesamt: ${st.dailyPnl>=0?'+':''}€${st.dailyPnl.toFixed(2)}`
-      );
-      closePos(pos.id);
-      return;
-    }
-    renderPositions();
-    // Redraw chart with position lines
-    const c=st.candles[pos.sym];
-    if(c&&pos.sym===st.pair.sym) drawChart(c,pos.pair);
-  },2000);
-}
-
-async function closePos(id){
-  const i=st.positions.findIndex(p=>p.id===id);if(i===-1)return;
-  const pos=st.positions[i];
-  if(pos._iv)clearInterval(pos._iv);
-  if(st.igConnected&&pos.igDealId){
-    try{
-      await fetch(`${PROXY}/api/positions/${pos.igDealId}`,{
-        method:'DELETE',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({env:st.env,size:LOTS,direction:pos.dir==='BUY'?'SELL':'BUY'})
-      });
-      log(`Position geschlossen: ${pos.sym}`,'i');
-    }catch(e){log(`Close: ${e.message}`,'e');}
-  }
-  st.positions.splice(i,1);renderPositions();fetchBalance();
-}
-
-function renderPositions(){
-  const el=document.getElementById('posList');
-  if(!st.positions.length){
-    el.innerHTML='<div style="padding:12px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:9px">Keine Positionen</div>';
-    document.getElementById('posPnlEl').textContent='€0.00';
-    document.getElementById('posPnlEl').style.color='';
-    return;
-  }
-  const tot=st.positions.reduce((s,p)=>s+p.pnl,0);
-  const badge=document.getElementById('posPnlEl');
-  badge.textContent=`${tot>=0?'+':''}€${tot.toFixed(2)}`;badge.style.color=tot>=0?'var(--green)':'var(--red)';
-  el.innerHTML=st.positions.map(p=>`
-    <div class="pos-row">
-      <div class="pos-top">
-        <span class="pos-sym" style="color:${p.dir==='BUY'?'var(--green)':'var(--red)'}">${p.sym} ${p.dir} ${p.auto?'🤖':''}</span>
-        <span class="pos-pnl ${p.pnl>=0?'pos-pos':'pos-neg'}">${p.pnl>=0?'+':''}€${p.pnl.toFixed(2)}</span>
-      </div>
-      <div class="pos-det">
-        <span>${LOTS}L · ${p.pips>0?'+':''}${p.pips}p · Sp:${p.spread}p · @${p.entry.toFixed(p.pair.dec)}</span>
-        <button class="cbtn" onclick="closePos(${p.id})">✕</button>
-      </div>
-    </div>`).join('');
-}
-
-// ════════════════════════════════════════
-//  CONNECT
-// ════════════════════════════════════════
-function validateAndConnect(){
-  const pass = document.getElementById('igPass').value.trim();
-  if(!pass){
-    document.getElementById('passError').style.display='block';
-    document.getElementById('igPass').focus();
-    return;
-  }
-  document.getElementById('passError').style.display='none';
-  startLive();
-}
-
-async function startLive(){
-  const btn = document.getElementById('connectBtn');
-  btn.textContent = 'Verbinde…';
-  btn.disabled = true;
-
-  // Read all values - use PREFILL as fallback
-  const tdKey  = PREFILL.tdKey;
-  const igKey  = PREFILL.igKey;
-  const igUser = PREFILL.igUser;
-  const igPass = document.getElementById('igPass').value.trim();
-  const env    = 'demo'; // Always demo from PREFILL setup
-  const tgToken  = PREFILL.tgToken;
-  const tgChatId = PREFILL.tgChatId;
-
-  // Set TD key
-  if(tdKey){ st.tdKey = tdKey; }
-
-  // Set Telegram
-  if(tgToken && tgChatId){
-    st.telegram = { botToken: tgToken, chatId: tgChatId };
-  }
-
-  // IG Login
-  try{
-    log('Verbinde mit IG Demo…', 'i');
-    const r = await fetch(`${PROXY}/api/session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey: igKey, username: igUser, password: igPass, env }),
-      signal: AbortSignal.timeout(15000),
-    });
-
-    const d = await r.json();
-
-    if(!r.ok || !d.ok){
-      throw new Error(d.error || d.detail?.errorCode || `HTTP ${r.status}`);
-    }
-
-    // SUCCESS
-    st.env = env;
-    st.igConnected = true;
-    st.igAccountId = d.accountId;
-    st.igCredentials = { apiKey: igKey, username: igUser, password: igPass, env };
-
-    log(`✅ IG ${env.toUpperCase()} verbunden — ${d.accountId}`, 's');
-
-    // Close modal only on success
-    document.getElementById('modal').style.display = 'none';
-
-    const pill = document.getElementById('connPill');
-    pill.className = 'pill pill-on';
-    pill.textContent = 'IG DEMO';
-    document.getElementById('modeBadge').className = 'logo-badge lb-paper';
-    document.getElementById('modeBadge').textContent = 'DEMO';
-    st.mode = 'demo';
-
-    fetchBalance();
-    scheduleSessionRefresh();
-
-    // Telegram after successful login
-    sendTelegram('🟢 ICT Scalper verbunden\nIG Demo aktiv\nAuto-Trading: AUS\nDaily Stop: -€10');
-
-    begin();
-
-  }catch(e){
-    // FAILURE - keep modal open, show error
-    log(`❌ IG Login: ${e.message}`, 'e');
-    const errDiv = document.getElementById('passError');
-    errDiv.textContent = `❌ Login fehlgeschlagen: ${e.message}`;
-    errDiv.style.display = 'block';
-    errDiv.style.color = 'var(--red)';
-    btn.textContent = '▶ Nochmal versuchen';
-    btn.disabled = false;
-  }
-}
-
-function startPaper(){
-  document.getElementById('modal').style.display='none';
-  document.getElementById('connPill').className='pill pill-on';
-  document.getElementById('connPill').textContent='PAPER';
-  st.mode='paper';
-  log('Paper Mode aktiv','w');
-  begin();
-}
-
-async function fetchBalance(){
-  if(!st.igConnected) return;
-  try{
-    const r=await fetch(`${PROXY}/api/accounts?env=${st.env}`);
-    const d=await r.json();
-    const acc=(d.accounts||[]).find(a=>a.preferred)||(d.accounts||[])[0];
-    if(acc?.balance){
-      const el=document.getElementById('balEl');el.style.display='block';
-      el.textContent=`€${(+acc.balance.balance).toLocaleString('de-DE',{minimumFractionDigits:2})}`;
-    }
-  }catch(e){log(`Balance: ${e.message}`,'w');}
-}
-
-
-// ════════════════════════════════════════
-//  TELEGRAM NOTIFICATIONS
-// ════════════════════════════════════════
-async function sendTelegram(message){
-  if(!st.telegram.botToken||!st.telegram.chatId) return;
-  try{
-    await fetch(`${PROXY}/api/notify`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        botToken:st.telegram.botToken,
-        chatId:st.telegram.chatId,
-        message
-      })
-    });
-  }catch(e){
-    console.log('Telegram error:',e.message);
-  }
-}
-
-
-// ════════════════════════════════════════
-//  SESSION REFRESH (every 5.5h)
-// ════════════════════════════════════════
-function scheduleSessionRefresh(){
-  setTimeout(async()=>{
-    if(!st.igConnected||!st.igCredentials) return;
-    try{
-      const {apiKey,username,password,env}=st.igCredentials;
-      const r=await fetch(`${PROXY}/api/session`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({apiKey,username,password,env})
-      });
-      const d=await r.json();
-      if(d.ok){
-        log('🔄 IG Session erneuert','s');
-        scheduleSessionRefresh();
-      }else{
-        log('⚠️ Session Erneuerung fehlgeschlagen','e');
-      }
-    }catch(e){log(`Session refresh: ${e.message}`,'w');}
-  }, 5.5*60*60*1000); // 5.5 hours
-}
-
-// ════════════════════════════════════════
+// ═══════════════════════════════════════
 //  SCAN
-// ════════════════════════════════════════
-// ════════════════════════════════════════
-//  SCAN TIMING
-//  - Price: every 1 second (TD /price endpoint)
-//  - Candles: every 30 seconds (TD /time_series)
-//  - ICT signals: recalculated every second on cached candles
-// ════════════════════════════════════════
-let lastCandleFetch = 0;
+// ═══════════════════════════════════════
+let lastCandleFetch=0;
 
 async function scan(){
   try{
-    const pair=st.pair;
-    const now = Date.now();
-    
-    // Fetch new candles every 60 seconds
-    if(now - lastCandleFetch > 60000 || !st.candles[pair.sym]?.length){
-      const candles=await fetchCandles(pair.sym,st.tf);
-      if(candles?.length){
-        st.candles[pair.sym]=candles;
-        lastCandleFetch=now;
-      }
+    const pair=st.pair,now=Date.now();
+    if(now-lastCandleFetch>60000||!st.candles[pair.sym]?.length){
+      const c=await fetchCandles(pair.sym,st.tf);
+      if(c?.length){st.candles[pair.sym]=c;lastCandleFetch=now;}
     }
-    
-    const candles=st.candles[pair.sym];
-    if(!candles?.length)return;
-
-    // Fetch realtime price every second
-    const rt=await fetchRTPrice(pair.sym);
-    const last=candles[candles.length-1];
-    const livePrice=rt||last.c;
-    
-    // Update last candle with live price
-    candles[candles.length-1]={...candles[candles.length-1], c:livePrice, 
-      h:Math.max(candles[candles.length-1].h, livePrice),
-      l:Math.min(candles[candles.length-1].l, livePrice)};
-
-    // Calculate spread
+    const candles=st.candles[pair.sym];if(!candles?.length)return;
+    const rt=await fetchRT(pair.sym);
+    const lp=rt||candles[candles.length-1].c;
+    candles[candles.length-1]={...candles[candles.length-1],c:lp,
+      h:Math.max(candles[candles.length-1].h,lp),
+      l:Math.min(candles[candles.length-1].l,lp)};
     const pip=pair.pip===2?0.01:0.0001;
-    const spreads={EURJPY:1.5,GBPJPY:2.5,USDJPY:1.2,USDCAD:2.0,EURCAD:2.5,EURGBP:1.8,NZDUSD:2.0,GBPCAD:3.0,CADJPY:2.0};
-    const sp=spreads[pair.sym]||2.0;
-    
     st.cache[pair.sym]={
-      lastPrice:livePrice,
-      prevClose:candles[candles.length-20]?.c||candles[0].c,
-      bid:+(livePrice-sp*pip/2).toFixed(pair.dec),
-      ask:+(livePrice+sp*pip/2).toFixed(pair.dec),
-      spread:sp,
+      lastPrice:lp,prevClose:candles[candles.length-20]?.c||candles[0].c,
+      bid:+(lp-pair.spread*pip/2).toFixed(pair.dec),
+      ask:+(lp+pair.spread*pip/2).toFixed(pair.dec),
+      spread:pair.spread,
     };
-
-    // Recompute ICT signal on live data
+    const chg=lp-(candles[candles.length-20]?.c||candles[0].c);
+    const chgPct=(chg/(candles[0].c||1)*100);
+    document.getElementById('livePrice').textContent=lp.toFixed(pair.dec);
+    document.getElementById('livePrice').className=`live-price ${chg>=0?'lp-up':'lp-dn'}`;
+    document.getElementById('priceChg').textContent=`${chgPct>=0?'+':''}${chgPct.toFixed(3)}%`;
+    document.getElementById('priceChg').style.color=chgPct>=0?'var(--green)':'var(--red)';
     const sig=computeSignal(candles,pair);
     st.signals[pair.sym]=sig;
-    updateSignal(sig);
-    updateSpreadDisplay(pair);
+    updateSignal(sig,pair);
     drawChart(candles,pair);
     renderPairs();
-
-    // Auto trade — no cooldown, just check setup
-    if(st.autoMode) checkAutoTrade(sig,pair);
-
-    // Log strong signals
-    if(sig.conf>=AUTO_CONF_THRESHOLD&&sig.dir!=='wait'&&sig.conf!==st._lastLoggedConf){
-      st._lastLoggedConf=sig.conf;
-      log(`📊 ${pair.sym} ${sig.dir.toUpperCase()} ${sig.conf}% — ${sig.detail}`,'ict');
-    }
-
-  }catch(e){
-    // Silent fail on price fetch — don't spam log
-    if(!e.message.includes('timeout')){
-      log(`Scan: ${e.message}`,'e');
-    }
-  }
+    // Auto send strong signals
+    if(sig.conf>=75&&sig.dir!=='wait') autoSendSignal(sig,pair);
+  }catch(e){log(`Scan: ${e.message}`,'e');}
 }
 
-let lastNonJPYScan = 0;
-
+let lastNonJPY=0;
 async function scanAll(){
-  const now = Date.now();
-  // JPY pairs: scan every cycle (60s)
-  // Non-JPY: scan every 3 cycles (180s) to save API credits
-  const scanNonJPY = now - lastNonJPYScan > 180000;
-  if(scanNonJPY) lastNonJPYScan = now;
-
+  const now=Date.now(),scanNonJPY=now-lastNonJPY>180000;
+  if(scanNonJPY)lastNonJPY=now;
   for(const pair of PAIRS){
-    if(pair.sym===st.pair.sym) continue;
-    if(!pair.priority && !scanNonJPY) continue; // skip non-JPY this cycle
+    if(pair.sym===st.pair.sym)continue;
+    if(!pair.priority&&!scanNonJPY)continue;
     try{
-      const candles=await fetchCandles(pair.sym,'15min');
-      if(!candles?.length) continue;
-      const last=candles[candles.length-1];
-      st.candles[pair.sym]=candles;
-      st.cache[pair.sym]={
-        lastPrice:last.c,
-        prevClose:candles[candles.length-20]?.c||candles[0].c,
-        bid:+(last.c-(pair.pip===2?0.03:0.00003)).toFixed(pair.dec),
-        ask:+(last.c+(pair.pip===2?0.03:0.00003)).toFixed(pair.dec),
-        spread:pair.pip===2?1.5:2.0,
-      };
-      const sig=computeSignal(candles,pair);
+      const c=await fetchCandles(pair.sym,'15min');
+      if(!c?.length)continue;
+      const lp=c[c.length-1].c;
+      st.candles[pair.sym]=c;
+      st.cache[pair.sym]={lastPrice:lp,prevClose:c[c.length-20]?.c||c[0].c,spread:pair.spread};
+      const sig=computeSignal(c,pair);
       st.signals[pair.sym]=sig;
-      if(st.autoMode) checkAutoTrade(sig,pair);
+      if(sig.conf>=75&&sig.dir!=='wait')autoSendSignal(sig,pair);
     }catch{}
-    await new Promise(r=>setTimeout(r,500));
+    await new Promise(r=>setTimeout(r,400));
   }
   renderPairs();
 }
 
-
-// ════════════════════════════════════════
-//  MIDNIGHT RESET
-// ════════════════════════════════════════
-function scheduleMidnightReset(){
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setUTCHours(24,0,0,0);
-  const msUntilMidnight = midnight - now;
-  setTimeout(()=>{
-    st.dailyPnl = 0;
-    st.dailyStopped = false;
-    st.lastAutoTrade = {};
-    updateDailyPnl();
-    // Re-enable auto button if it was stopped by daily limit
-    if(document.getElementById('autoBtn').className.includes('stopped')){
-      document.getElementById('autoBtn').className = 'auto-btn off';
-      document.getElementById('autoBtn').textContent = '⚡ AUTO TRADING OFF';
-      document.getElementById('modeBadge').className = 'logo-badge lb-paper';
-      document.getElementById('modeBadge').textContent = st.igConnected ? st.env.toUpperCase() : 'PAPER';
-    }
-    log('🌅 Tages-Reset: PnL zurückgesetzt, Daily Limit entsperrt','s');
-    autoLog('🌅 Neuer Tag — Daily P&L zurückgesetzt');
-    scheduleMidnightReset(); // reschedule for next midnight
-  }, msUntilMidnight);
-  log('⏰ Midnight Reset geplant in ' + Math.round(msUntilMidnight/60000) + ' Min','i');
-}
-function begin(){
-  log('ICT Scalper gestartet — Mini Pairs · 0.01L · Spread-aware Auto-Trading','s');
-  scheduleMidnightReset();
-  PAIRS.forEach(p=>{
-    st.cache[p.sym]={lastPrice:null,prevClose:null,spread:2.0};
-    st.signals[p.sym]={dir:'wait',conf:0};
-  });
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+window.addEventListener('load',()=>{
+  PAIRS.forEach(p=>{st.cache[p.sym]={lastPrice:null,prevClose:null,spread:p.spread};st.signals[p.sym]={dir:'wait',conf:0};});
   renderPairs();
+  log('ICT Signal Bot gestartet','s');
+  log('Telegram Alerts: automatisch bei Conf ≥75%','i');
+  log('Manuell: Signal-Button rechts tippen','i');
+  // Test telegram on start
+  tgSend('🚀 ICT Signal Bot gestartet\nAutomatische Alerts bei Conf ≥75%\nManuelle Alerts per Button').then(ok=>{
+    if(ok)log('✅ Telegram verbunden','s');
+    else log('⚠️ Telegram nicht erreichbar','w');
+  });
   scan();
   scanAll();
-  setInterval(scan,10000); // 10 Sekunden — TD Free Tier safe (6/min)
-  setInterval(scanAll,60000); // Background pairs alle 60 Sekunden
-  // Auto trade checked on every scan (every second)
-}
-
-window.addEventListener('load',()=>{
-  setDir('BUY');updateExecBtn();calcRR();
-  ['slIn','tpIn'].forEach(id=>document.getElementById(id).addEventListener('input',calcRR));
-  // Prefill all credentials from PREFILL config
-  Object.entries(PREFILL).forEach(([id,val])=>{
-    const el=document.getElementById(id);
-    if(el) el.value=val;
-  });
-  log('ICT Scalper bereit — JPY Priorität aktiv','i');
+  setInterval(scan,15000);
+  setInterval(scanAll,60000);
 });
 
 window.addEventListener('resize',()=>{
