@@ -271,6 +271,7 @@ const st = {
   currentSig: {dir:'wait', conf:0},
   signalCount: 0,
   lastTgSignal: {},
+  openSignals: {}, // tracks active signals per pair
 };
 
 // ═══════════════════════════════════════
@@ -372,43 +373,87 @@ async function sendSignalToTelegram(){
   }
 }
 
-// Auto-send strong signals
+// Auto-send Entry + Exit signals
 async function autoSendSignal(sig, pair){
-  if(sig.dir==='wait'||sig.conf<75) return;
-  const lastSent=st.lastTgSignal[pair.sym]||0;
-  if(Date.now()-lastSent < 30*60*1000) return; // 30min cooldown
-  st.lastTgSignal[pair.sym]=Date.now();
-  
+  const open = st.openSignals[pair.sym];
+  const h=new Date().getUTCHours(),m=new Date().getUTCMinutes();
+  const inKZ=(h===7)||(h===8&&m<30)||(h===12)||(h===13&&m<30);
   const d=st.cache[pair.sym];
   const price=d?.lastPrice||0;
   const pip=pair.pip===2?0.01:0.0001;
   const sp=pair.spread*pip;
+
+  // ── EXIT SIGNAL ──────────────────────────────
+  if(open){
+    const openDir=open.dir;
+    const shouldExit =
+      (openDir==='buy'  && sig.dir==='sell' && sig.conf>=65) ||  // signal flipped
+      (openDir==='sell' && sig.dir==='buy'  && sig.conf>=65) ||  // signal flipped
+      (openDir==='buy'  && sig.dir==='wait' && open.conf>=75 && sig.conf<40) || // setup broke
+      (openDir==='sell' && sig.dir==='wait' && open.conf>=75 && sig.conf<40);   // setup broke
+
+    if(shouldExit){
+      const entryPrice=open.entry;
+      const currentPrice=price;
+      const pipDiff=openDir==='buy'
+        ?(currentPrice-entryPrice)/pip
+        :(entryPrice-currentPrice)/pip;
+      const reason=sig.dir!=='wait'?`Gegenrichtung ${sig.dir.toUpperCase()} ${sig.conf}%`:'Setup gebrochen';
+
+      const exitMsg=
+        `🚨 EXIT SIGNAL — SCHLIESSEN\n` +
+        `${openDir==='buy'?'🟢':'🔴'} ${openDir.toUpperCase()} ${pair.sym}\n` +
+        `━━━━━━━━━━━━━━━\n` +
+        `Entry war: ${entryPrice}\n` +
+        `Jetzt: ${price.toFixed(pair.dec)}\n` +
+        `Pips: ${pipDiff>0?'+':''}${pipDiff.toFixed(1)}p\n` +
+        `━━━━━━━━━━━━━━━\n` +
+        `Grund: ${reason}\n` +
+        `${new Date().toUTCString()}`;
+
+      const ok=await tgSend(exitMsg);
+      if(ok){
+        log(`🚨 EXIT: ${pair.sym} ${openDir.toUpperCase()} — ${reason}`,'tg');
+        document.getElementById('autoLog').textContent=`🚨 EXIT ${pair.sym}: ${reason}`;
+        st.openSignals[pair.sym]=null;
+        st.signalCount++;
+        document.getElementById('sigCount').textContent=`Signale: ${st.signalCount}`;
+      }
+      return;
+    }
+    return; // signal still valid, don't spam
+  }
+
+  // ── ENTRY SIGNAL ─────────────────────────────
+  if(sig.dir==='wait'||sig.conf<75) return;
+  const lastSent=st.lastTgSignal[pair.sym]||0;
+  if(Date.now()-lastSent < 30*60*1000) return;
+  st.lastTgSignal[pair.sym]=Date.now();
+
   const entry=sig.dir==='buy'?+(price+sp/2).toFixed(pair.dec):+(price-sp/2).toFixed(pair.dec);
   const sl=sig.dir==='buy'?+(entry-SL_PIPS*pip).toFixed(pair.dec):+(entry+SL_PIPS*pip).toFixed(pair.dec);
   const tp=sig.dir==='buy'?+(entry+TP_PIPS*pip).toFixed(pair.dec):+(entry-TP_PIPS*pip).toFixed(pair.dec);
-  const h=new Date().getUTCHours(),m=new Date().getUTCMinutes();
-  const inKZ=(h===7)||(h===8&&m<30)||(h===12)||(h===13&&m<30);
 
   const msg=
-    `🤖 AUTO SIGNAL\n` +
     `${sig.dir==='buy'?'🟢 BUY':'🔴 SELL'} ${sig.sweep?'⚡ SWEEP ':''}<b>${pair.sym}</b>\n` +
     `━━━━━━━━━━━━━━━\n` +
     `Entry: <b>${entry}</b>\n` +
     `SL: ${sl} (-${SL_PIPS}p)\n` +
     `TP: ${tp} (+${TP_PIPS}p)\n` +
-    `Spread: ${pair.spread}p\n` +
+    `Spread: ${pair.spread}p · R:R 1:${(TP_PIPS/SL_PIPS).toFixed(1)}\n` +
     `━━━━━━━━━━━━━━━\n` +
-    `Conf: ${sig.conf}%\n` +
-    `Setup: ${sig.detail}\n` +
-    `${inKZ?'🎯 Kill Zone\n':''}` +
+    `Conf: ${sig.conf}% · ${sig.detail}\n` +
+    `${inKZ?'🎯 Kill Zone aktiv\n':''}` +
     `${new Date().toUTCString()}`;
 
   const ok=await tgSend(msg);
   if(ok){
+    // Track open signal for exit detection
+    st.openSignals[pair.sym]={dir:sig.dir,entry,conf:sig.conf,time:Date.now()};
     st.signalCount++;
     document.getElementById('sigCount').textContent=`Signale: ${st.signalCount}`;
-    log(`🤖 Auto Signal: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}%`,'tg');
-    document.getElementById('autoLog').textContent=`📱 Signal gesendet: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}% @ ${new Date().toLocaleTimeString()}`;
+    log(`📱 Signal: ${sig.dir.toUpperCase()} ${pair.sym} ${sig.conf}%`,'tg');
+    document.getElementById('autoLog').textContent=`📱 ${sig.dir.toUpperCase()} ${pair.sym} @ ${entry} | SL:${sl} TP:${tp}`;
   }
 }
 
