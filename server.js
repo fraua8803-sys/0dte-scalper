@@ -66,115 +66,162 @@ async function tgSend(message) {
   return ok;
 }
 
-// ── DATENQUELLEN ────────────────────────────────────────────────
-// PRIMÄR:  TradingView WebSocket (tradingview-ws npm) — ~1min Delay, kostenlos
-// FALLBACK: Twelve Data REST — 1min Kerzen zu 15min aggregiert
+// ── DATENQUELLEN ─────────────────────────────────────────────────
+// PRIMÄR:  TradingView WebSocket (direkt, kein npm-Paket nötig) ~1min Delay
+// FALLBACK: Twelve Data REST API
 
-// TradingView Symbol-Format für Forex: FX:EURUSD
-function tvSymbol(sym) {
-  return `FX:${sym}`;
+const WebSocket = require('ws');
+
+// ── TradingView WebSocket direkt ──────────────────────────────────
+// Protokoll: wss://data.tradingview.com/socket.io/websocket
+// Gleiche Methode wie der Browser — kein Account nötig für Forex-Daten
+
+function tvMsg(m, p) {
+  const s = JSON.stringify({ m, p });
+  return `~m~${s.length}~m~${s}`;
 }
 
-// Cache TradingView Connection (wiederverwendet für alle Pairs)
-let tvConnection = null;
-async function getTVConnection() {
-  if (tvConnection) return tvConnection;
-  try {
-    const { connect } = await import('tradingview-ws');
-    tvConnection = await connect();
-    console.log('[TV] TradingView WebSocket verbunden');
-    return tvConnection;
-  } catch (e) {
-    console.log(`[TV] Verbindung fehlgeschlagen: ${e.message}`);
-    return null;
+function parseTVMsg(raw) {
+  const msgs = [];
+  const pattern = /~m~\d+~m~/g;
+  const parts = raw.split(pattern).filter(Boolean);
+  for (const part of parts) {
+    try { msgs.push(JSON.parse(part)); } catch {}
   }
+  return msgs;
 }
 
-// Kerzen von TradingView holen (15min Timeframe)
 async function fetchCandlesTV(sym) {
-  try {
-    const conn = await getTVConnection();
-    if (!conn) return null;
-    const { getCandles } = await import('tradingview-ws');
-    const results = await getCandles({
-      connection: conn,
-      symbols:   [tvSymbol(sym)],
-      amount:    150,
-      timeframe: 15,           // 15min Kerzen
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => { try { ws.close(); } catch {} resolve(null); }, 12000);
+    let ws;
+    try {
+      ws = new WebSocket('wss://data.tradingview.com/socket.io/websocket', {
+        headers: {
+          'Origin': 'https://www.tradingview.com',
+          'User-Agent': 'Mozilla/5.0 (compatible; TradingBot/1.0)',
+        }
+      });
+    } catch(e) { clearTimeout(timeout); resolve(null); return; }
+
+    const session = 'cs_' + Math.random().toString(36).slice(2, 12);
+    const candles = [];
+    let gotData = false;
+
+    ws.on('open', () => {
+      ws.send(tvMsg('chart_create_session', [session, '']));
+      ws.send(tvMsg('quote_set_fields', [session, 'lp', 'ch', 'chp']));
+      ws.send(tvMsg('resolve_symbol', [session, 'sds_sym_1', `={"symbol":"FX:${sym}","adjustment":"splits"}`]));
+      ws.send(tvMsg('create_series', [session, 's1', 's1', 'sds_sym_1', '15', 150]));
     });
-    const raw = results[0];
-    if (!raw || raw.length < 10) return null;
-    return raw.map(c => ({
-      o: c.open, h: c.high, l: c.low, c: c.close,
-    }));
-  } catch (e) {
-    console.log(`[TV] ${sym}: ${e.message}`);
-    tvConnection = null;       // Reset bei Fehler → nächster Versuch reconnect
-    return null;
-  }
+
+    ws.on('message', (data) => {
+      const raw = data.toString();
+      // Heartbeat
+      if (raw.includes('~h~')) { ws.send(`~m~${raw.match(/~h~\d+/)[0].length}~m~${raw.match(/~h~\d+/)[0]}`); return; }
+      const msgs = parseTVMsg(raw);
+      for (const msg of msgs) {
+        if (msg.m === 'timescale_update' || msg.m === 'du') {
+          try {
+            const series = msg.p?.[1]?.s1 || msg.p?.[1]?.['$prices'];
+            if (series?.s) {
+              for (const bar of series.s) {
+                if (bar.v && bar.v.length >= 5) {
+                  candles.push({ o: bar.v[1], h: bar.v[2], l: bar.v[3], c: bar.v[4] });
+                }
+              }
+              if (candles.length >= 10) {
+                gotData = true;
+                clearTimeout(timeout);
+                ws.close();
+                resolve(candles);
+              }
+            }
+          } catch {}
+        }
+      }
+    });
+
+    ws.on('error', () => { clearTimeout(timeout); resolve(null); });
+    ws.on('close', () => { if (!gotData) { clearTimeout(timeout); resolve(null); } });
+  });
 }
 
-// Live-Preis von TradingView
 async function fetchPriceTV(sym) {
-  try {
-    const conn = await getTVConnection();
-    if (!conn) return null;
-    const { getQuote } = await import('tradingview-ws');
-    const quote = await getQuote({ connection: conn, symbol: tvSymbol(sym) });
-    const p = parseFloat(quote?.price ?? quote?.lp);
-    return (!isNaN(p) && p > 0) ? p : null;
-  } catch (e) {
-    return null;
-  }
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => { try { ws.close(); } catch {} resolve(null); }, 8000);
+    let ws;
+    try {
+      ws = new WebSocket('wss://data.tradingview.com/socket.io/websocket', {
+        headers: { 'Origin': 'https://www.tradingview.com', 'User-Agent': 'Mozilla/5.0' }
+      });
+    } catch(e) { clearTimeout(timeout); resolve(null); return; }
+
+    const session = 'qs_' + Math.random().toString(36).slice(2, 12);
+    let gotPrice = false;
+
+    ws.on('open', () => {
+      ws.send(tvMsg('quote_create_session', [session]));
+      ws.send(tvMsg('quote_set_fields', [session, 'lp']));
+      ws.send(tvMsg('quote_add_symbols', [session, `FX:${sym}`]));
+    });
+
+    ws.on('message', (data) => {
+      const raw = data.toString();
+      if (raw.includes('~h~')) { ws.send(`~m~${raw.match(/~h~\d+/)[0].length}~m~${raw.match(/~h~\d+/)[0]}`); return; }
+      const msgs = parseTVMsg(raw);
+      for (const msg of msgs) {
+        if (msg.m === 'qsd') {
+          const price = msg.p?.[1]?.v?.lp;
+          if (price && !isNaN(price)) {
+            gotPrice = true;
+            clearTimeout(timeout);
+            ws.close();
+            resolve(parseFloat(price));
+          }
+        }
+      }
+    });
+
+    ws.on('error', () => { clearTimeout(timeout); resolve(null); });
+    ws.on('close', () => { if (!gotPrice) { clearTimeout(timeout); resolve(null); } });
+  });
 }
 
-// Twelve Data Fallback: LIVE PRICE
+// ── Twelve Data Fallback ──────────────────────────────────────────
 async function fetchPriceTD(sym) {
   try {
-    const r = await fetch(
-      `https://api.twelvedata.com/price?symbol=${sym}&apikey=${TD_KEY}`,
-      { signal: AbortSignal.timeout(6000) }
-    );
+    const r = await fetch(`https://api.twelvedata.com/price?symbol=${sym}&apikey=${TD_KEY}`, { signal: AbortSignal.timeout(6000) });
     const d = await r.json();
     const p = parseFloat(d.price);
     return (!isNaN(p) && p > 0) ? p : null;
   } catch { return null; }
 }
 
-// Twelve Data Fallback: CANDLES (1min → 15min)
 async function fetchCandlesTD(sym) {
   try {
-    const url1 = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=1min&outputsize=200&apikey=${TD_KEY}&format=JSON`;
-    const r1 = await fetch(url1, { signal: AbortSignal.timeout(12000) });
-    const d1 = await r1.json();
-    if (d1.status !== 'error' && d1.values && d1.values.length >= 30) {
-      const raw = d1.values.reverse().map(v => ({
-        o: parseFloat(v.open), h: parseFloat(v.high),
-        l: parseFloat(v.low),  c: parseFloat(v.close),
-      }));
+    const url = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=1min&outputsize=200&apikey=${TD_KEY}&format=JSON`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    const d = await r.json();
+    if (d.status !== 'error' && d.values?.length >= 30) {
+      const raw = d.values.reverse().map(v => ({ o:+v.open, h:+v.high, l:+v.low, c:+v.close }));
       const out = [];
-      for (let i = 0; i + 14 < raw.length; i += 15) {
-        const s = raw.slice(i, i + 15);
-        out.push({ o: s[0].o, h: Math.max(...s.map(x => x.h)), l: Math.min(...s.map(x => x.l)), c: s[s.length-1].c });
+      for (let i = 0; i+14 < raw.length; i += 15) {
+        const s = raw.slice(i, i+15);
+        out.push({ o:s[0].o, h:Math.max(...s.map(x=>x.h)), l:Math.min(...s.map(x=>x.l)), c:s[s.length-1].c });
       }
       if (out.length >= 8) return out;
     }
+    // 5min fallback
     const url5 = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=5min&outputsize=150&apikey=${TD_KEY}&format=JSON`;
     const r5 = await fetch(url5, { signal: AbortSignal.timeout(12000) });
     const d5 = await r5.json();
-    if (d5.status !== 'error' && d5.values) {
-      return d5.values.reverse().map(v => ({
-        o: parseFloat(v.open), h: parseFloat(v.high), l: parseFloat(v.low), c: parseFloat(v.close),
-      }));
-    }
+    if (d5.values) return d5.values.reverse().map(v => ({ o:+v.open, h:+v.high, l:+v.low, c:+v.close }));
     return null;
-  } catch (e) {
-    console.log(`[TD] ${sym}: ${e.message}`);
-    return null;
-  }
+  } catch(e) { console.log(`[TD] ${sym}: ${e.message}`); return null; }
 }
 
-// HAUPT-FUNKTIONEN: TV zuerst, Twelve Data als Fallback
+// ── HAUPT-FUNKTIONEN: TV zuerst, TD als Fallback ──────────────────
 async function fetchPrice(sym) {
   const tv = await fetchPriceTV(sym);
   if (tv) { console.log(`[Price] ${sym}: ${tv} (TradingView)`); return tv; }
@@ -185,7 +232,7 @@ async function fetchPrice(sym) {
 
 async function fetchCandles(sym) {
   const tv = await fetchCandlesTV(sym);
-  if (tv) { console.log(`[Candles] ${sym}: ${tv.length} Kerzen (TradingView)`); return tv; }
+  if (tv?.length >= 10) { console.log(`[Candles] ${sym}: ${tv.length} Kerzen (TradingView)`); return tv; }
   const td = await fetchCandlesTD(sym);
   if (td) { console.log(`[Candles] ${sym}: ${td.length} Kerzen (TwelveData fallback)`); return td; }
   return null;
