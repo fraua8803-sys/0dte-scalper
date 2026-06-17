@@ -66,31 +66,129 @@ async function tgSend(message) {
   return ok;
 }
 
-// ── TWELVE DATA ──────────────────────────────────────────────────
-async function fetchCandles(sym, interval = '15min') {
+// ── DATENQUELLEN ────────────────────────────────────────────────
+// PRIMÄR:  TradingView WebSocket (tradingview-ws npm) — ~1min Delay, kostenlos
+// FALLBACK: Twelve Data REST — 1min Kerzen zu 15min aggregiert
+
+// TradingView Symbol-Format für Forex: FX:EURUSD
+function tvSymbol(sym) {
+  return `FX:${sym}`;
+}
+
+// Cache TradingView Connection (wiederverwendet für alle Pairs)
+let tvConnection = null;
+async function getTVConnection() {
+  if (tvConnection) return tvConnection;
   try {
-    const url = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=${interval}&outputsize=150&apikey=${TD_KEY}&format=JSON`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    const data = await r.json();
-    if (data.status === 'error' || !data.values) throw new Error(data.message || 'No data');
-    return data.values.reverse().map(v => ({
-      o: parseFloat(v.open), h: parseFloat(v.high),
-      l: parseFloat(v.low),  c: parseFloat(v.close),
+    const { connect } = await import('tradingview-ws');
+    tvConnection = await connect();
+    console.log('[TV] TradingView WebSocket verbunden');
+    return tvConnection;
+  } catch (e) {
+    console.log(`[TV] Verbindung fehlgeschlagen: ${e.message}`);
+    return null;
+  }
+}
+
+// Kerzen von TradingView holen (15min Timeframe)
+async function fetchCandlesTV(sym) {
+  try {
+    const conn = await getTVConnection();
+    if (!conn) return null;
+    const { getCandles } = await import('tradingview-ws');
+    const results = await getCandles({
+      connection: conn,
+      symbols:   [tvSymbol(sym)],
+      amount:    150,
+      timeframe: 15,           // 15min Kerzen
+    });
+    const raw = results[0];
+    if (!raw || raw.length < 10) return null;
+    return raw.map(c => ({
+      o: c.open, h: c.high, l: c.low, c: c.close,
     }));
+  } catch (e) {
+    console.log(`[TV] ${sym}: ${e.message}`);
+    tvConnection = null;       // Reset bei Fehler → nächster Versuch reconnect
+    return null;
+  }
+}
+
+// Live-Preis von TradingView
+async function fetchPriceTV(sym) {
+  try {
+    const conn = await getTVConnection();
+    if (!conn) return null;
+    const { getQuote } = await import('tradingview-ws');
+    const quote = await getQuote({ connection: conn, symbol: tvSymbol(sym) });
+    const p = parseFloat(quote?.price ?? quote?.lp);
+    return (!isNaN(p) && p > 0) ? p : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Twelve Data Fallback: LIVE PRICE
+async function fetchPriceTD(sym) {
+  try {
+    const r = await fetch(
+      `https://api.twelvedata.com/price?symbol=${sym}&apikey=${TD_KEY}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    const d = await r.json();
+    const p = parseFloat(d.price);
+    return (!isNaN(p) && p > 0) ? p : null;
+  } catch { return null; }
+}
+
+// Twelve Data Fallback: CANDLES (1min → 15min)
+async function fetchCandlesTD(sym) {
+  try {
+    const url1 = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=1min&outputsize=200&apikey=${TD_KEY}&format=JSON`;
+    const r1 = await fetch(url1, { signal: AbortSignal.timeout(12000) });
+    const d1 = await r1.json();
+    if (d1.status !== 'error' && d1.values && d1.values.length >= 30) {
+      const raw = d1.values.reverse().map(v => ({
+        o: parseFloat(v.open), h: parseFloat(v.high),
+        l: parseFloat(v.low),  c: parseFloat(v.close),
+      }));
+      const out = [];
+      for (let i = 0; i + 14 < raw.length; i += 15) {
+        const s = raw.slice(i, i + 15);
+        out.push({ o: s[0].o, h: Math.max(...s.map(x => x.h)), l: Math.min(...s.map(x => x.l)), c: s[s.length-1].c });
+      }
+      if (out.length >= 8) return out;
+    }
+    const url5 = `https://api.twelvedata.com/time_series?symbol=${sym}&interval=5min&outputsize=150&apikey=${TD_KEY}&format=JSON`;
+    const r5 = await fetch(url5, { signal: AbortSignal.timeout(12000) });
+    const d5 = await r5.json();
+    if (d5.status !== 'error' && d5.values) {
+      return d5.values.reverse().map(v => ({
+        o: parseFloat(v.open), h: parseFloat(v.high), l: parseFloat(v.low), c: parseFloat(v.close),
+      }));
+    }
+    return null;
   } catch (e) {
     console.log(`[TD] ${sym}: ${e.message}`);
     return null;
   }
 }
 
+// HAUPT-FUNKTIONEN: TV zuerst, Twelve Data als Fallback
 async function fetchPrice(sym) {
-  try {
-    const r = await fetch(`https://api.twelvedata.com/price?symbol=${sym}&apikey=${TD_KEY}`, {
-      signal: AbortSignal.timeout(6000),
-    });
-    const d = await r.json();
-    return parseFloat(d.price) || null;
-  } catch { return null; }
+  const tv = await fetchPriceTV(sym);
+  if (tv) { console.log(`[Price] ${sym}: ${tv} (TradingView)`); return tv; }
+  const td = await fetchPriceTD(sym);
+  if (td) { console.log(`[Price] ${sym}: ${td} (TwelveData fallback)`); return td; }
+  return null;
+}
+
+async function fetchCandles(sym) {
+  const tv = await fetchCandlesTV(sym);
+  if (tv) { console.log(`[Candles] ${sym}: ${tv.length} Kerzen (TradingView)`); return tv; }
+  const td = await fetchCandlesTD(sym);
+  if (td) { console.log(`[Candles] ${sym}: ${td.length} Kerzen (TwelveData fallback)`); return td; }
+  return null;
 }
 
 // ── INDICATORS ───────────────────────────────────────────────────
@@ -144,13 +242,42 @@ function detectLiq(c, n = 30) {
     if (r[i].h > r[i-1].h && r[i].h > r[i-2].h && r[i].h > r[i+1].h && r[i].h > r[i+2].h) sh.push(r[i].h);
     if (r[i].l < r[i-1].l && r[i].l < r[i-2].l && r[i].l < r[i+1].l && r[i].l < r[i+2].l) sl.push(r[i].l);
   }
-  return { highs: sh.slice(-3), lows: sl.slice(-3) };
+  // N-Perioden High/Low als primäre Liquidität (zuverlässiger als Swing-Points)
+  // letzte 3 Kerzen ausgelassen, damit die Sweep-Kerze nicht ihr eigenes Level ist
+  const w20 = c.slice(-23, -3);
+  const w50 = c.slice(-53, -3);
+  const hi20 = w20.length ? Math.max(...w20.map(x => x.h)) : null;
+  const lo20 = w20.length ? Math.min(...w20.map(x => x.l)) : null;
+  const hi50 = w50.length ? Math.max(...w50.map(x => x.h)) : null;
+  const lo50 = w50.length ? Math.min(...w50.map(x => x.l)) : null;
+  return { highs: sh.slice(-3), lows: sl.slice(-3), hi20, lo20, hi50, lo50 };
 }
 
 function detectSweep(c, liq) {
-  const last = c[c.length-1], prev = c[c.length-2];
-  for (const h of liq.highs) if (last.h > h && prev.h <= h) return { dir:'bear', detail:`BSL Sweep @ ${h.toFixed(3)}` };
-  for (const l of liq.lows)  if (last.l < l && prev.l >= l) return { dir:'bull', detail:`SSL Sweep @ ${l.toFixed(3)}` };
+  // Sweep wird auf der letzten GESCHLOSSENEN Kerze geprüft (Bestätigung),
+  // nicht auf der laufenden Live-Kerze. So entern wir nicht in den Docht selbst.
+  const k = c[c.length-2];                       // geschlossene Kerze
+  const rng = (k.h - k.l) || 1e-9;
+  const upWick   = (k.h - Math.max(k.o, k.c)) / rng;  // Ablehnung von oben
+  const downWick = (Math.min(k.o, k.c) - k.l) / rng;  // Ablehnung von unten
+
+  const highLevels = [liq.hi20, liq.hi50, ...liq.highs].filter(v => v != null);
+  const lowLevels  = [liq.lo20, liq.lo50, ...liq.lows ].filter(v => v != null);
+
+  // Bearischer Sweep: Docht nimmt ein High, Close zurück darunter, starke obere Ablehnung
+  for (const h of highLevels) {
+    if (k.h > h && k.c < h && upWick >= 0.5) {
+      return { dir:'bear', level:h, wick:Math.round(upWick*100),
+               detail:`BSL Sweep @ ${h.toFixed(3)} (Wick ${Math.round(upWick*100)}%)` };
+    }
+  }
+  // Bullischer Sweep: Docht nimmt ein Low, Close zurück darüber, starke untere Ablehnung
+  for (const l of lowLevels) {
+    if (k.l < l && k.c > l && downWick >= 0.5) {
+      return { dir:'bull', level:l, wick:Math.round(downWick*100),
+               detail:`SSL Sweep @ ${l.toFixed(3)} (Wick ${Math.round(downWick*100)}%)` };
+    }
+  }
   return null;
 }
 
@@ -175,56 +302,150 @@ function isKillZone() {
   return { active: lon||ny||tok, name: lon?'London KZ':ny?'NY KZ':tok?'Tokyo KZ':null };
 }
 
+// ══════════════════════════════════════════════════════════════
+// A+ ICT ENTRY CHECKLIST — alle 5 Punkte PFLICHT für ein Signal
+// ══════════════════════════════════════════════════════════════
+// 1. LIQUIDITY GRAB  — Sweep eines Highs/Lows mit Wick-Ablehnung
+// 2. MSS             — Market Structure Shift nach dem Sweep
+// 3. DISCOUNT/PREMIUM— Long nur unter 50% des Ranges, Short drüber
+// 4. PD ARRAY        — FVG oder OB als Einstiegszone
+// 5. KILL ZONE       — London (07-09 UTC) oder NY (12-14 UTC)
+// ══════════════════════════════════════════════════════════════
+
+function detectMSS(candles, sweepDir) {
+  // Market Structure Shift: nach einem bullischen Sweep muss der Preis
+  // ein vorheriges Swing-High brechen (= bullisher MSS / BOS).
+  // Nach bearischem Sweep muss er ein Swing-Low brechen.
+  if (candles.length < 10) return false;
+  const recent = candles.slice(-10);
+  if (sweepDir === 'bull') {
+    // Preis muss ein lokales Hoch der letzten 10 Kerzen nach oben brechen
+    const prevHigh = Math.max(...recent.slice(0, -2).map(c => c.h));
+    return recent[recent.length-1].h > prevHigh || recent[recent.length-2].h > prevHigh;
+  } else {
+    // Preis muss ein lokales Tief brechen
+    const prevLow = Math.min(...recent.slice(0, -2).map(c => c.l));
+    return recent[recent.length-1].l < prevLow || recent[recent.length-2].l < prevLow;
+  }
+}
+
+function detectOTE(candles, sweepDir) {
+  // Optimal Trade Entry: 62-79% Fibonacci Retracement des letzten Swings
+  // Nach bullischem Sweep: letzter Swing = von letztem Low zu aktuellem High
+  if (candles.length < 5) return { inOTE: false };
+  const recent = candles.slice(-15);
+  let swingHigh, swingLow;
+  if (sweepDir === 'bull') {
+    swingLow  = Math.min(...recent.map(c => c.l));
+    swingHigh = Math.max(...recent.map(c => c.h));
+    const range = swingHigh - swingLow;
+    const ote62 = swingHigh - range * 0.62;
+    const ote79 = swingHigh - range * 0.79;
+    const price = recent[recent.length-1].c;
+    return { inOTE: price >= ote79 && price <= ote62, ote62, ote79 };
+  } else {
+    swingLow  = Math.min(...recent.map(c => c.l));
+    swingHigh = Math.max(...recent.map(c => c.h));
+    const range = swingHigh - swingLow;
+    const ote62 = swingLow + range * 0.62;
+    const ote79 = swingLow + range * 0.79;
+    const price = recent[recent.length-1].c;
+    return { inOTE: price >= ote62 && price <= ote79, ote62, ote79 };
+  }
+}
+
+function discountPremium(candles, sweepDir) {
+  // 50% Fibonacci Filter: Long nur im Discount (unter 50%), Short nur im Premium
+  if (candles.length < 20) return true; // kein Filter wenn zu wenig Daten
+  const recent = candles.slice(-30);
+  const high = Math.max(...recent.map(c => c.h));
+  const low  = Math.min(...recent.map(c => c.l));
+  const mid  = (high + low) / 2;
+  const price = candles[candles.length-1].c;
+  if (sweepDir === 'bull') return price < mid;   // Long nur im Discount
+  else                     return price > mid;   // Short nur im Premium
+}
+
 function computeSignal(candles, pair) {
-  if (candles.length < 30) return { dir:'wait', conf:0, detail:'Not enough data' };
+  if (candles.length < 30) return { dir:'wait', conf:0, detail:'Warmup' };
+
+  const pip  = pair.pip === 2 ? 0.01 : 0.0001;
+  const liq  = detectLiq(candles);
+  const kz   = isKillZone();
+
+  // ── STEP 1: KILL ZONE (Pflicht für A+ Setup) ─────────────────
+  if (!kz.active) {
+    return { dir:'wait', conf:0, detail:`Keine Kill Zone (${new Date().getUTCHours()}:${String(new Date().getUTCMinutes()).padStart(2,'0')} UTC)` };
+  }
+
+  // ── STEP 2: LIQUIDITY GRAB (Pflicht) ─────────────────────────
+  const sweep = detectSweep(candles, liq);
+  if (!sweep) {
+    return { dir:'wait', conf:0, detail:'Kein Liquidity Grab' };
+  }
+
+  // ── STEP 3: MARKET STRUCTURE SHIFT (Pflicht) ─────────────────
+  const mss = detectMSS(candles, sweep.dir);
+  if (!mss) {
+    return { dir:'wait', conf:10, detail:`Sweep OK · Warte auf MSS` };
+  }
+
+  // ── STEP 4: DISCOUNT / PREMIUM FILTER (Pflicht) ──────────────
+  const inZone = discountPremium(candles, sweep.dir);
+  if (!inZone) {
+    return { dir:'wait', conf:20, detail:`Sweep+MSS OK · Preis ausserhalb ${sweep.dir==='bull'?'Discount':'Premium'}` };
+  }
+
+  // ── STEP 5: PD ARRAY — FVG oder OB (mindestens eines) ────────
+  const fvgs  = detectFVG(candles);
+  const obs   = detectOB(candles);
+  const last  = candles[candles.length-1];
+  const ote   = detectOTE(candles, sweep.dir);
+
+  const nearFVG = fvgs.find(f =>
+    Math.abs(last.c - f.mid) / pip < 20 &&
+    ((sweep.dir === 'bull' && f.type === 'bull') || (sweep.dir === 'bear' && f.type === 'bear'))
+  );
+  const nearOB = obs.find(o =>
+    Math.abs(last.c - (o.top+o.bottom)/2) / pip < 20 &&
+    ((sweep.dir === 'bull' && o.type === 'bull') || (sweep.dir === 'bear' && o.type === 'bear'))
+  );
+
+  const hasPDArray = nearFVG || nearOB || ote.inOTE;
+  if (!hasPDArray) {
+    return { dir:'wait', conf:30, detail:`Sweep+MSS+Zone OK · Warte auf FVG/OB/OTE` };
+  }
+
+  // ── ALLE 5 PUNKTE ERFÜLLT → A+ SIGNAL ────────────────────────
+  const direction = sweep.dir === 'bull' ? 'buy' : 'sell';
+  const pdLabel   = nearFVG ? 'FVG' : nearOB ? 'OB' : 'OTE';
+
+  // Konfidenz: Basis 75 + Boni für Qualität
+  let conf = 75;
+  const details = [`⚡${sweep.dir==='bull'?'SSL':'BSL'}`, 'MSS', pdLabel, kz.name];
+
+  if (nearFVG && nearOB)  { conf += 10; details.push('+FVG+OB'); }  // beide = stärker
+  if (ote.inOTE)          { conf += 8;  details.push('OTE✓'); }
+  if (sweep.wick >= 70)   { conf += 7;  details.push(`Wick${sweep.wick}%`); }
+
+  // EMA Trend-Bestätigung als Bonus
   const closes = candles.map(c => c.c);
-  const ms     = detectMS(candles);
-  const fvgs   = detectFVG(candles);
-  const obs    = detectOB(candles);
-  const liq    = detectLiq(candles);
-  const sweep  = detectSweep(candles, liq);
-  const kz     = isKillZone();
-  const ef     = ema(closes, 8), es = ema(closes, 21);
-  const rv     = rsi(closes, 14);
-  const last   = candles[candles.length-1];
-  const n      = closes.length - 1;
-  const pip    = pair.pip === 2 ? 0.01 : 0.0001;
-  const curRSI = rv[n] || 50;
-  const emaAbove = ef[n] > es[n];
-  const crossUp   = ef[n] > es[n] && ef[n-1] <= es[n-1];
-  const crossDown = ef[n] < es[n] && ef[n-1] >= es[n-1];
-  const nearFVG = fvgs.find(f => Math.abs(last.c - f.mid) / pip < 25);
-  const nearOB  = obs.find(o => Math.abs(last.c - (o.top+o.bottom)/2) / pip < 25);
+  const ef = ema(closes, 8), es = ema(closes, 21);
+  const n  = closes.length - 1;
+  if (direction === 'buy'  && ef[n] > es[n]) { conf += 5; }
+  if (direction === 'sell' && ef[n] < es[n]) { conf += 5; }
 
-  let bs = 0, ss = 0, reasons = [];
-  if (ms.bias === 'bull') { bs += 25; reasons.push('MS↑'); }
-  else if (ms.bias === 'bear') { ss += 25; reasons.push('MS↓'); }
-  if (sweep) {
-    if (sweep.dir === 'bull') { bs += 35; reasons.push('⚡SSL'); }
-    else { ss += 35; reasons.push('⚡BSL'); }
-  }
-  if (nearFVG) {
-    if (nearFVG.type === 'bull' && last.c > nearFVG.mid - nearFVG.mid*0.001) { bs += 20; reasons.push('FVG↑'); }
-    else if (nearFVG.type === 'bear') { ss += 20; reasons.push('FVG↓'); }
-  }
-  if (nearOB) {
-    if (nearOB.type === 'bull') { bs += 15; reasons.push('OB↑'); }
-    else { ss += 15; reasons.push('OB↓'); }
-  }
-  if (emaAbove) bs += 10; else ss += 10;
-  if (crossUp)   { bs += 10; reasons.push('EMA↑'); }
-  if (crossDown) { ss += 10; reasons.push('EMA↓'); }
-  if (curRSI > 55) bs += 5; else if (curRSI < 45) ss += 5;
-  if (kz.active) { bs = Math.round(bs * 1.2); ss = Math.round(ss * 1.2); if (kz.name) reasons.push(kz.name); }
+  conf = Math.min(conf, 100);
 
-  const bc = Math.min(bs, 100), sc = Math.min(ss, 100);
-  const detail = reasons.slice(0, 4).join(' · ') || 'No setup';
-
-  if (sweep && bc > sc && bc >= MIN_CONF) return { dir:'buy',  conf:bc, detail:`⚡SSL SWEEP · ${detail}`, sweep:true };
-  if (sweep && sc > bc && sc >= MIN_CONF) return { dir:'sell', conf:sc, detail:`⚡BSL SWEEP · ${detail}`, sweep:true };
-  if (bc >= MIN_CONF && bc > sc) return { dir:'buy',  conf:bc, detail };
-  if (sc >= MIN_CONF && sc > bc) return { dir:'sell', conf:sc, detail };
-  return { dir:'wait', conf: Math.max(bc, sc), detail: `B${bc}% S${sc}%` };
+  return {
+    dir:    direction,
+    conf,
+    detail: details.slice(0,5).join(' · '),
+    sweep:  true,
+    level:  sweep.level,
+    pdArray: pdLabel,
+    kz:     kz.name,
+  };
 }
 
 // ── SIGNAL ALERTS ────────────────────────────────────────────────
@@ -316,7 +537,7 @@ async function scanPair(pair) {
       (!pair.priority && scanRound % 12 === 0);
 
     if (needsCandles) {
-      const candles = await fetchCandles(pair.sym, '15min');
+      const candles = await fetchCandles(pair.sym);
       if (candles) state.lastCandles[pair.sym] = candles;
     }
 
